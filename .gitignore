@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+
+# env files (keep only *.example)
+.env
+.env.*
+!.env.example
+
+# local IDE/system
+.vercel/
+.cursor/
+.idea/
+.vscode/
