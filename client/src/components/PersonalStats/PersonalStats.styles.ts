@@ -1,41 +1,58 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const statPulse = keyframes`
+  0%,
+  100% {
+    opacity: 0.48;
+  }
+  50% {
+    opacity: 0.88;
+  }
+`;
 
 export const Root = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.75rem;
 `;
 
 export const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+  width: 100%;
 `;
 
 export const StatCard = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  border-radius: ${({ theme }) => theme.radius.card};
-  padding: 1rem 0.9rem;
+  border-radius: ${({ theme }) => theme.radius.control};
+  padding: 0.55rem 0.4rem;
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   box-shadow: ${({ theme }) => theme.shadow.card};
+  min-width: 0;
+  text-align: center;
 `;
 
 export const StatValue = styled.div`
-  font-size: 1.45rem;
+  font-size: clamp(0.82rem, 2.1vw, 1.05rem);
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
-  line-height: 1.2;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
 `;
 
 export const StatLabel = styled.div`
-  font-size: 0.8rem;
+  font-size: clamp(0.58rem, 1.45vw, 0.72rem);
   color: ${({ theme }) => theme.colors.muted};
   margin-top: 0.25rem;
+  line-height: 1.25;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 `;
 
 export const SectionTitle = styled.h2`
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
 `;
@@ -50,7 +67,7 @@ export const SubSectionTitle = styled.h3`
 export const TableWrap = styled.div`
   overflow-x: auto;
   overflow-y: auto;
-  max-height: min(52vh, 420px);
+  max-height: min(62vh, 560px);
   border-radius: ${({ theme }) => theme.radius.card};
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   background: ${({ theme }) => theme.colors.surface};
@@ -59,7 +76,7 @@ export const TableWrap = styled.div`
 export const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 `;
 
 export const Th = styled.th`
@@ -67,7 +84,7 @@ export const Th = styled.th`
   top: 0;
   z-index: 2;
   text-align: right;
-  padding: 0.65rem 0.75rem;
+  padding: 0.75rem 0.85rem;
   background: ${({ theme }) => theme.colors.bg};
   color: ${({ theme }) => theme.colors.muted};
   font-weight: 600;
@@ -77,7 +94,7 @@ export const Th = styled.th`
 
 export const Td = styled.td`
   text-align: right;
-  padding: 0.55rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   color: ${({ theme }) => theme.colors.text};
 `;
@@ -93,6 +110,27 @@ export const Empty = styled.p`
   color: ${({ theme }) => theme.colors.muted};
   text-align: center;
   padding: 1.5rem 1rem;
+`;
+
+export const StatCardSkeleton = styled.div`
+  min-height: 3.4rem;
+  border-radius: ${({ theme }) => theme.radius.control};
+  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  background: ${({ theme }) => theme.colors.surface2};
+  animation: ${statPulse} 1.15s ease-in-out infinite;
+`;
+
+export const TableLoadingPlaceholder = styled.div`
+  min-height: 160px;
+  border-radius: ${({ theme }) => theme.radius.card};
+  border: 1px dashed ${({ theme }) => theme.colors.borderSubtle};
+  background: ${({ theme }) => theme.colors.bg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.muted};
+  font-size: 0.9rem;
+  font-weight: 600;
 `;
 
 export const Muted = styled.span`

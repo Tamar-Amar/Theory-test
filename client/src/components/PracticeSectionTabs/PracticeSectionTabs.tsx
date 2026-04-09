@@ -21,16 +21,18 @@ function PersonIcon() {
 
 export function PracticeSectionTabs() {
   return (
-    <S.Tabs role="tablist" aria-label="אזור אפליקציה">
-      <S.TabNav to="/profile" end role="tab">
-        <S.TabInner>
-          <PersonIcon />
-          אזור אישי
-        </S.TabInner>
-      </S.TabNav>
-      <S.TabNav to="/practice" end role="tab">
-        תרגול
-      </S.TabNav>
-    </S.Tabs>
+    <S.TabsRail>
+      <S.Tabs role="tablist" aria-label="אזור אפליקציה">
+        <S.TabNav to="/profile" end role="tab">
+          <S.TabInner>
+            <PersonIcon />
+            אזור אישי
+          </S.TabInner>
+        </S.TabNav>
+        <S.TabNav to="/practice" end role="tab">
+          תרגול
+        </S.TabNav>
+      </S.Tabs>
+    </S.TabsRail>
   );
 }

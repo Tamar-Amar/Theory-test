@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 import { getAdminCredentials } from "../config.js";
 import { UserModel } from "../models/User.js";
 import { signAdminToken, signUserToken } from "../services/jwt.js";
@@ -8,6 +9,7 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^\S{3,32}$/;
 
 router.post("/register", async (req, res) => {
   const username =
@@ -17,8 +19,10 @@ router.post("/register", async (req, res) => {
   const password =
     typeof req.body?.password === "string" ? req.body.password : "";
 
-  if (!username || username.length < 3 || username.length > 32) {
-    return res.status(400).json({ error: "שם משתמש: 3–32 תווים ללא רווחים" });
+  if (!USERNAME_RE.test(username)) {
+    return res.status(400).json({
+      error: "שם משתמש: 3–32 תווים רצופים ללא רווחים",
+    });
   }
   if (!EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
@@ -40,11 +44,27 @@ router.post("/register", async (req, res) => {
       user: { username: user.username, email: user.email },
     });
   } catch (e: unknown) {
+    if (e instanceof mongoose.Error.ValidationError) {
+      const first = Object.values(e.errors)[0];
+      const path = first?.path;
+      if (path === "username") {
+        return res.status(400).json({
+          error: "שם משתמש: 3–32 תווים רצופים ללא רווחים",
+        });
+      }
+      if (path === "email") {
+        return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
+      }
+      return res.status(400).json({
+        error: first?.message || "נתונים לא תקינים",
+      });
+    }
     const code =
       e && typeof e === "object" && "code" in e ? (e as { code: number }).code : 0;
     if (code === 11000) {
       return res.status(409).json({ error: "שם משתמש או אימייל כבר קיימים" });
     }
+    console.error("register failed:", e);
     return res.status(400).json({ error: "ההרשמה נכשלה" });
   }
 });

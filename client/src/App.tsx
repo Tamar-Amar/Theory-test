@@ -4,6 +4,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 import {
@@ -37,6 +38,8 @@ type Phase = "setup" | "quiz" | "results";
 
 function AppShell() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const wideProfileLayout = pathname === "/profile";
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -120,7 +123,7 @@ function AppShell() {
   const handleLoggedIn = useCallback(
     (u: AuthUser) => {
       setUser(u);
-      navigate(u.admin ? "/admin" : "/practice", { replace: true });
+      navigate(u.admin ? "/admin" : "/profile", { replace: true });
     },
     [navigate]
   );
@@ -145,13 +148,19 @@ function AppShell() {
     }
   };
 
-  const pickOption = (optionIndex: number) => {
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[current] = optionIndex;
-      return next;
-    });
-  };
+  const pickOption = useCallback(
+    (optionIndex: number) => {
+      setAnswers((prev) => {
+        const next = [...prev];
+        next[current] = optionIndex;
+        return next;
+      });
+      if (current < questions.length - 1) {
+        setCurrent((c) => c + 1);
+      }
+    },
+    [current, questions.length]
+  );
 
   const goNext = () => {
     if (current < questions.length - 1) setCurrent((c) => c + 1);
@@ -243,7 +252,7 @@ function AppShell() {
 
   if (user.admin) {
     return (
-      <PageContainer>
+      <PageContainer wide={false}>
         <AppHeader
           title="תרגול תאוריה"
           subtitle="לוח בקרה — מנהל"
@@ -263,7 +272,7 @@ function AppShell() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer wide={wideProfileLayout}>
       <AppHeader
         title="תרגול תאוריה"
         subtitle="תרגול עם מיקוד על פי תוצאות בחינות קודמות"
@@ -278,8 +287,8 @@ function AppShell() {
       {error && <ErrorAlert>{error}</ErrorAlert>}
 
       <Routes>
-        <Route path="/login" element={<Navigate to="/practice" replace />} />
-        <Route path="/" element={<Navigate to="/practice" replace />} />
+        <Route path="/login" element={<Navigate to="/profile" replace />} />
+        <Route path="/" element={<Navigate to="/profile" replace />} />
         <Route
           path="/practice"
           element={
@@ -335,14 +344,14 @@ function AppShell() {
               <>
                 <PracticeSectionTabs />
                 <PersonalStats />
-                <div style={{ marginTop: "1.25rem" }}>
+                <div style={{ marginTop: "2rem" }}>
                   <SupportTicketForm />
                 </div>
               </>
             )
           }
         />
-        <Route path="*" element={<Navigate to="/practice" replace />} />
+        <Route path="*" element={<Navigate to="/profile" replace />} />
       </Routes>
     </PageContainer>
   );
