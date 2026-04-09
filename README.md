@@ -1,114 +1,110 @@
-# תרגול תאוריה — מדריך למפתחים
+# Theory practice — developer guide
 
-פרויקט full-stack: שרת Node (Express + MongoDB) ולקוח React (Vite + TypeScript + styled-components).  
-**השאלות נטענות ממסד MongoDB המקומי** (אין סנכרון אוטומטי לאתר חיצוני).
-
----
-
-## הרצה מהירה
-
-1. **MongoDB** פעיל, עם שאלות באוסף **`questions`** (מבנה לפי מודל Mongoose ב־`server/src/models/Question.ts`).
-2. **שרת** (`server/`): העתק `.env.example` ל־`.env`, אז `npm install` ו־`npm run dev`.
-3. **לקוח** (`client/`): `npm install` ו־`npm run dev` (פרוקסי ל־`/api` מצביע ל־`127.0.0.1:4000`).
+Full-stack app: **Node** (Express + MongoDB + JWT) and **React** (Vite + TypeScript + styled-components).  
+Questions are stored in MongoDB (`questions` collection). RTL UI for Hebrew learners.
 
 ---
 
-## מבנה תיקיות (ברמה גבוהה)
+## Quick start (local)
 
-| תיקייה | תוכן |
-|--------|------|
-| `server/src` | API, מודלים Mongoose, אימות JWT, בחירת שאלות “חכמה” |
-| `client/src` | אפליקציית React, קומפוננטות, theme, `api.ts` |
-
----
-
-## קומפוננטות React (`client/src/components/`)
-
-לכל קומפוננטה יש בדרך כלל קובץ `*.styles.ts` עם styled-components; הלוגיקה ב־`*.tsx`.
-
-### פריסה ומעטפת
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **PageContainer** | עמוד ממורכז: רוחב מקסימלי (~640px) וריפוד. עוטף את כל המסכים. |
-| **Card** | כרטיס ויזואלי (רקע, מסגרת, צל). וריאנט `narrow` לטפסי הרשמה (צר וממורכז). |
-| **AppHeader** | כותרת ראשית + תת־כותרת; מקבל `children` (למשל **UserBar** אחרי התחברות). |
-
-### אימות
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **AuthTabs** | מעבר בין מצב “התחברות” / “הרשמה”. |
-| **AuthPanel** | טופס מלא: שם משתמש, אימייל (בהרשמה), סיסמה, אימות סיסמה; קורא ל־`login` / `register` ב־API. |
-| **UserBar** | הצגת שם + אימייל והכפתור “יציאה”. |
-
-### טפסים ומשוב
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **FormField** | שורת טופס: `Label` + תוכן (ילדים). מייצאת גם **FieldInput** / **FieldSelect** מסוגננים. |
-| **Button** | וריאנטים: Primary, Ghost, Secondary, PrimaryInline (לשורת ניווט במבחן), ResultsPrimary (אחרי תוצאות). |
-| **ErrorAlert** | הודעת שגיאה אדומה; `compact` לשימוש בתוך כרטיס צר. |
-| **LoadingState** | טקסט “טוען…” ממורכז. |
-
-### לפני המבחן
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **QuizSetup** | בחירת מספר שאלות, קטגוריה, **SmartModeInfo**, כפתור “התחל מבחן”; שורת מטא (כמה שאלות במסד). |
-| **SmartModeInfo** | הסבר שמצב חכם תמיד פעיל בשרת. |
-
-### במהלך המבחן
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **QuizView** | מרכיבה את מסך המבחן: אין לה קובץ styles משלה; משתמשת בילדים למטה. |
-| **QuizProgress** | מונה שאלה / סה״כ, טיימר, פס התקדמות באחוזים. |
-| **QuizQuestionTitle** | טקסט השאלה בלבד. |
-| **QuestionImage** | תמונה אם יש `imageUrl` בשדה השאלה (למשל קישור ל־URL חיצוני). |
-| **AnswerOption** | שורת בחירה (רדיו + טקסט אפשרות), מצב נבחר/לא נבחר. |
-| **AnswerList** | עטיפת `div` לרשימת האפשרויות; מעבירה `role` / `aria-*` לנגישות. |
-| **QuizNavRow** | שורת כפתורים (“הקודם”, “הבא” / “סיום וציון”). |
-
-### אחרי המבחן
-
-| קומפוננטה | תפקיד |
-|-----------|--------|
-| **ResultsView** | מסך תוצאות: ציון, רמז, רשימת פירוט, “מבחן נוסף”. |
-| **ScoreDisplay** | אחוז גדול + שורת משנה (נכונות / זמן). |
-| **ResultsHint** | פסקה קצרה על חזרה על טעויות במבחנים הבאים. |
-| **BreakdownList** | רשימת “שאלה N — נכון/שגוי” לפי `breakdown` מהשרת. |
+1. **MongoDB** running and populated with questions (see `server/src/models/Question.ts`).
+2. **Server** (`server/`): copy `server/.env.example` → `server/.env`, fill every variable, then:
+   ```bash
+   cd server && npm install && npm run dev
+   ```
+3. **Client** (`client/`): optional `client/.env` with `VITE_API_BASE_URL` if the API is not proxied; for local dev the Vite proxy sends `/api` to `http://127.0.0.1:4000`.
+   ```bash
+   cd client && npm install && npm run dev
+   ```
 
 ---
 
-## קבצים נלווים בלקוח
+## Repository layout
 
-| קובץ / תיקייה | תפקיד |
-|----------------|--------|
-| `App.tsx` | אורקסטרציה: סטייט גלובלי, אפקטים (אימות, מטא, טיימר), ניתוב לוגי בין מסכים. |
-| `api.ts` | קריאות `fetch` ל־`/api` ו־`/api/auth`, ניהול JWT ב־`localStorage`. |
-| `main.tsx` | `ThemeProvider` (styled-components), `GlobalStyle`, רינדור `App`. |
-| `theme/theme.ts` | ערכי צבע, רדיוסים, פונט — נגישים ב־`props.theme` בכל styled component. |
-| `theme/styled.d.ts` | הרחבת `DefaultTheme` של styled-components ל־TypeScript. |
-| `styles/GlobalStyle.ts` | איפוס גלובלי (`body`, `#root`, `button`). |
-| `types/auth.ts` | טיפוס `AuthMode`. |
-| `utils/formatElapsed.ts` | פורמט זמן לתצוגה (טיימר / תוצאות). |
+| Path | Role |
+|------|------|
+| `server/src` | REST API, Mongoose models, JWT auth, quiz session & stats |
+| `client/src` | React app, components, theme, `api.ts` |
 
 ---
 
-## שרת (`server/src`) — רפרנס קצר
+## Environment variables
 
-| אזור | תפקיד |
+The server **does not inject defaults** for required keys: if something is missing, the process exits with an error.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PORT` | Yes | HTTP port (number), e.g. `4000` |
+| `MONGODB_URI` or `MONGO_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret for signing JWTs (long random string) |
+| `JWT_EXPIRES_DAYS` | Yes | Token lifetime in days (number), e.g. `14` |
+| `ADMIN_USERNAME` | Yes | Admin login username |
+| `ADMIN_PASSWORD` | Yes | Admin login password |
+| `CORS_ORIGINS` | Yes | Allowed browser origins, comma-separated (no spaces around URLs) |
+| `ATTEMPT_EXPIRE_AFTER_SECONDS` | Yes | `0` = no TTL; positive = Mongo TTL on attempts (seconds) |
+
+See `server/.env.example` for a template.
+
+### Client (`VITE_*`)
+
+| Variable | When needed | Description |
+|----------|-------------|-------------|
+| `VITE_API_BASE_URL` | Production / split domains | Public base URL of the API, **no trailing slash**, e.g. `https://api.example.com`. Empty = requests go to the same origin as the site (`/api/...`). |
+
+---
+
+## Vercel — what to set in Environment Variables
+
+Use **two Vercel projects** (recommended): one for the client, one for the API **or** host the API on Render/Fly/Railway and only put the client on Vercel.
+
+### 1) Frontend project (root directory: `client`)
+
+| Name | Value |
 |------|--------|
-| `routes/auth.ts` | הרשמה, התחברות, `/me`. |
-| `routes/api.ts` | מטא, יצירת סשן מבחן, שליחת תשובות. |
-| `middleware/auth.ts` | JWT חובה לנתיבי מבחן. |
-| `services/quizPick.ts` | בחירת שאלות (חלק “חלשות” + אקראי). |
-| `services/userStats.ts` | עדכון סטטיסטיקה אחרי כל תשובה. |
-| `models/` | User, Question, QuizSession, Attempt, UserQuestionStat. |
+| `VITE_API_BASE_URL` | Full URL of your API, e.g. `https://your-api.onrender.com` (no `/` at the end) |
+
+**Build settings (typical):**
+
+- Framework preset: Vite  
+- Root directory: `client`  
+- Build command: `npm run build`  
+- Output directory: `dist`  
+
+`VITE_*` variables are baked in at **build time** — after changing them, trigger a **new deployment**.
+
+### 2) Backend project (only if the API is deployed on Vercel)
+
+Add **all** server variables from the table above, for example:
+
+| Name | Notes |
+|------|--------|
+| `PORT` | Often `3000` or whatever your host expects; Vercel may override via `process.env.PORT` |
+| `MONGODB_URI` | Atlas or other hosted MongoDB |
+| `JWT_SECRET` | Strong random secret |
+| `JWT_EXPIRES_DAYS` | e.g. `14` |
+| `ADMIN_USERNAME` | Your admin user |
+| `ADMIN_PASSWORD` | Strong password |
+| `CORS_ORIGINS` | Must include your live frontend, e.g. `https://your-app.vercel.app` |
+| `ATTEMPT_EXPIRE_AFTER_SECONDS` | Usually `0` |
+
+**Important:** This repo runs a classic Express server (`app.listen`). Vercel is built for static sites and serverless functions. For the API, many teams use **Render / Railway / Fly.io** instead; then only the **client** project on Vercel needs `VITE_API_BASE_URL` pointing at that API URL.
 
 ---
 
-## משתני סביבה (`server/.env`)
+## Server reference (`server/src`)
 
-ראו `.env.example`: `PORT`, `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_DAYS`.
+| Area | Role |
+|------|------|
+| `routes/auth.ts` | Register, login, `/me` |
+| `routes/api.ts` | Meta, quiz sessions, attempts, tickets, stats |
+| `routes/admin.ts` | Admin stats, user deletion |
+| `middleware/auth.ts` | JWT verification |
+| `services/quizPick.ts` | Question selection (weak areas + random) |
+| `services/userStats.ts` | Per-question stats after each answer |
+| `models/` | User, Question, QuizSession, Attempt, UserQuestionStat, SupportTicket |
+
+---
+
+## License
+
+Private project unless you add a license file.
