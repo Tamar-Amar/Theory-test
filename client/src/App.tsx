@@ -27,6 +27,7 @@ import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
 import { PracticeSectionTabs } from "./components/PracticeSectionTabs/PracticeSectionTabs";
+import { LearningArea } from "./components/LearningArea/LearningArea";
 import { QuizSetup } from "./components/QuizSetup/QuizSetup";
 import { QuizView } from "./components/QuizView/QuizView";
 import { ResultsView } from "./components/ResultsView/ResultsView";
@@ -39,7 +40,7 @@ type Phase = "setup" | "quiz" | "results";
 function AppShell() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const wideProfileLayout = pathname === "/profile";
+  const wideProfileLayout = pathname === "/profile" || pathname === "/learning";
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -347,6 +348,19 @@ function AppShell() {
                 <div style={{ marginTop: "2rem" }}>
                   <SupportTicketForm />
                 </div>
+              </>
+            )
+          }
+        />
+        <Route
+          path="/learning"
+          element={
+            phase !== "setup" ? (
+              <Navigate to="/practice" replace />
+            ) : (
+              <>
+                <PracticeSectionTabs />
+                <LearningArea meta={meta} loadingMeta={loadingMeta} />
               </>
             )
           }

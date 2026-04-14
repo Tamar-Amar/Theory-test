@@ -4,7 +4,7 @@ import styled from "styled-components";
 /** רוחב קבוע למסלול הלשוניות — לא נמתח עם תוכן רחב באזור אישי */
 export const TabsRail = styled.div`
   width: 100%;
-  max-width: 640px;
+  max-width: 760px;
   margin-inline: auto;
   margin-bottom: 1.15rem;
 `;

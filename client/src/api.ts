@@ -45,6 +45,19 @@ export type StartQuizResponse = {
   questions: QuizQuestion[];
 };
 
+export type LearningQuestion = {
+  index: number;
+  text: string;
+  options: string[];
+  correctIndex: number;
+  imageUrl?: string;
+};
+
+export type StartLearningResponse = {
+  focusWeak: true;
+  questions: LearningQuestion[];
+};
+
 export type SubmitResponse = {
   score: number;
   total: number;
@@ -252,6 +265,22 @@ export async function submitSession(
       ...authHeaders(),
     },
     body: JSON.stringify({ answers, durationMs, category }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export async function createLearningSession(
+  count: number,
+  category: string
+): Promise<StartLearningResponse> {
+  const res = await fetch(apiUrl("/api/learning/sessions"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ count, category }),
   });
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();

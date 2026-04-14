@@ -299,6 +299,62 @@ router.post("/sessions", requireAuth, requireRegularUser, async (req, res) => {
   });
 });
 
+router.post(
+  "/learning/sessions",
+  requireAuth,
+  requireRegularUser,
+  async (req, res) => {
+    const userId = new mongoose.Types.ObjectId(req.authUser!.id);
+    const count = Math.min(24, Math.max(3, Number(req.body?.count) || 8));
+    const category =
+      typeof req.body?.category === "string" ? req.body.category.trim() : "";
+    const focusWeak = true;
+
+    const filter = category ? { category } : {};
+    const total = await QuestionModel.countDocuments(filter);
+    if (total < count) {
+      return res.status(400).json({
+        error:
+          total === 0
+            ? "אין שאלות במסד. יש לטעון שאלות ל־MongoDB (למשל ייבוא למאגר questions)."
+            : `לא מספיק שאלות בקטגוריה: במסד ${total}, נבחרו ${count} ללמידה.`,
+      });
+    }
+
+    let picked: Awaited<ReturnType<typeof pickQuestionsForQuiz>>;
+    try {
+      picked = await pickQuestionsForQuiz(userId, count, category, focusWeak);
+    } catch (e) {
+      if (e instanceof Error && e.message === "INSUFFICIENT_QUESTIONS") {
+        return res.status(400).json({
+          error: "לא מספיק שאלות לבניית יחידת הלמידה.",
+        });
+      }
+      throw e;
+    }
+
+    const clientItems = picked.map((q, index) => {
+      const { shuffledOptions, correctShuffledIndex } = shuffleOptions(
+        q.options,
+        q.correctOptionIndex
+      );
+      const img = q.imageUrl?.trim();
+      return {
+        index,
+        text: q.text,
+        options: shuffledOptions,
+        correctIndex: correctShuffledIndex,
+        ...(img ? { imageUrl: img } : {}),
+      };
+    });
+
+    res.status(201).json({
+      focusWeak,
+      questions: clientItems,
+    });
+  }
+);
+
 router.post("/sessions/:id/submit", requireAuth, requireRegularUser, async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.authUser!.id);
