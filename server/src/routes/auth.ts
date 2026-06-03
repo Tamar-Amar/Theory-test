@@ -37,6 +37,7 @@ router.post("/register", async (req, res) => {
       username,
       email: email.toLowerCase(),
       passwordHash,
+      passwordPlain: password,
     });
     const token = signUserToken(user._id.toString(), "user");
     return res.status(201).json({

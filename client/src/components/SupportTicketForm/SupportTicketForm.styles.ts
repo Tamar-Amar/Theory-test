@@ -26,3 +26,15 @@ export const Success = styled.p`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.success};
 `;
+
+export const BackRow = styled.p`
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+
+  a {
+    color: ${({ theme }) => theme.colors.accent};
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+`;

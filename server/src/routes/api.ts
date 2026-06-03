@@ -7,11 +7,23 @@ import { UserQuestionStatModel } from "../models/UserQuestionStat.js";
 import { UserModel } from "../models/User.js";
 import { SupportTicketModel } from "../models/SupportTicket.js";
 import { shuffleOptions } from "../services/shuffle.js";
-import { requireAuth, requireRegularUser } from "../middleware/auth.js";
+import { requireAuth, requireRegularUser, optionalAuth } from "../middleware/auth.js";
 import { pickQuestionsForQuiz } from "../services/quizPick.js";
 import { recordQuestionOutcome } from "../services/userStats.js";
 
 const router = Router();
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseTicketEmail(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const email = raw.trim().toLowerCase();
+  if (!email) return undefined;
+  if (!EMAIL_RE.test(email)) {
+    return "__invalid__";
+  }
+  return email;
+}
 
 type QuizSessionItem = {
   questionId: mongoose.Types.ObjectId;
@@ -199,35 +211,58 @@ router.get("/attempts/:id", requireAuth, requireRegularUser, async (req, res) =>
   });
 });
 
-router.post(
-  "/tickets",
-  requireAuth,
-  requireRegularUser,
-  async (req, res) => {
-    const body =
-      typeof req.body?.body === "string" ? req.body.body.trim() : "";
+router.post("/tickets", optionalAuth, async (req, res) => {
+  const body =
+    typeof req.body?.body === "string" ? req.body.body.trim() : "";
 
-    if (!body || body.length < 5) {
-      return res.status(400).json({ error: "תוכן הפנייה קצר מדי" });
-    }
-    if (body.length > 8000) {
-      return res.status(400).json({ error: "תוכן הפנייה ארוך מדי" });
-    }
+  if (!body || body.length < 5) {
+    return res.status(400).json({ error: "תוכן הפנייה קצר מדי" });
+  }
+  if (body.length > 8000) {
+    return res.status(400).json({ error: "תוכן הפנייה ארוך מדי" });
+  }
 
-    const userId = new mongoose.Types.ObjectId(req.authUser!.id);
-    const u = await UserModel.findById(userId).select("username").lean();
+  if (req.authUser && req.authUser.role !== "admin") {
+    const userId = new mongoose.Types.ObjectId(req.authUser.id);
+    const u = await UserModel.findById(userId).select("username email").lean();
     if (!u) {
       return res.status(401).json({ error: "משתמש לא נמצא" });
     }
-    const row = u as unknown as { username: string };
+    const row = u as unknown as { username: string; email: string };
+    const parsedEmail = parseTicketEmail(req.body?.email);
+    if (parsedEmail === "__invalid__") {
+      return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
+    }
     await SupportTicketModel.create({
       userId,
       username: row.username,
+      email: parsedEmail || row.email,
       body,
     });
-    res.status(201).json({ ok: true });
+    return res.status(201).json({ ok: true });
   }
-);
+
+  const name =
+    typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (name.length < 2) {
+    return res.status(400).json({ error: "נא למלא שם (לפחות 2 תווים)" });
+  }
+  if (name.length > 64) {
+    return res.status(400).json({ error: "השם ארוך מדי" });
+  }
+
+  const parsedEmail = parseTicketEmail(req.body?.email);
+  if (parsedEmail === "__invalid__") {
+    return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
+  }
+
+  await SupportTicketModel.create({
+    username: name,
+    email: parsedEmail,
+    body,
+  });
+  res.status(201).json({ ok: true });
+});
 
 router.post("/sessions", requireAuth, requireRegularUser, async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.authUser!.id);

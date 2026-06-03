@@ -40,6 +40,7 @@ router.get("/stats", async (_req, res) => {
         userId: { $toString: "$_id" },
         username: 1,
         email: 1,
+        passwordPlain: 1,
         attemptCount: { $size: "$atts" },
       },
     },
@@ -50,6 +51,7 @@ router.get("/stats", async (_req, res) => {
     userId: row.userId as string,
     username: row.username as string,
     email: (row.email as string) ?? "",
+    password: (row.passwordPlain as string) ?? "",
     attemptCount: row.attemptCount as number,
   }));
 
@@ -61,6 +63,7 @@ router.get("/stats", async (_req, res) => {
   const tickets = ticketsRaw.map((t) => ({
     id: String(t._id),
     username: t.username,
+    email: (t.email as string) ?? "",
     body: t.body,
     createdAt: (t.createdAt as Date).toISOString(),
   }));

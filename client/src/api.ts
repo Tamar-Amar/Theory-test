@@ -177,6 +177,7 @@ export async function fetchUserStats(): Promise<UserStats> {
 export type AdminTicketRow = {
   id: string;
   username: string;
+  email: string;
   body: string;
   createdAt: string;
 };
@@ -185,6 +186,7 @@ export type AdminUserRow = {
   userId: string;
   username: string;
   email: string;
+  password: string;
   attemptCount: number;
 };
 
@@ -214,14 +216,28 @@ export async function deleteAdminUser(userId: string): Promise<void> {
   if (!res.ok) throw new Error(await parseError(res));
 }
 
-export async function submitSupportTicket(body: string): Promise<void> {
+export async function submitSupportTicket(
+  body: string,
+  opts?: { guestName?: string; email?: string }
+): Promise<void> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const payload: { body: string; name?: string; email?: string } = { body };
+
+  if (opts?.email?.trim()) {
+    payload.email = opts.email.trim();
+  }
+  if (opts?.guestName) {
+    payload.name = opts.guestName;
+  } else {
+    Object.assign(headers, authHeaders());
+  }
+
   const res = await fetch(apiUrl("/api/tickets"), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({ body }),
+    headers,
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(await parseError(res));
 }

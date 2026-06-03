@@ -109,6 +109,7 @@ export function AdminDashboard() {
                 <tr>
                   <S.Th>שם משתמש</S.Th>
                   <S.Th>אימייל</S.Th>
+                  <S.Th>סיסמה</S.Th>
                   <S.Th>מבחנים שהושלמו</S.Th>
                   <S.Th>פעולות</S.Th>
                 </tr>
@@ -118,6 +119,7 @@ export function AdminDashboard() {
                   <S.Tr key={u.userId}>
                     <S.Td>{u.username}</S.Td>
                     <S.Td>{u.email || "—"}</S.Td>
+                    <S.Td>{u.password || "—"}</S.Td>
                     <S.Td>{u.attemptCount}</S.Td>
                     <S.Td>
                       <S.DeleteButton
@@ -147,6 +149,7 @@ export function AdminDashboard() {
                 <tr>
                   <S.Th>תאריך</S.Th>
                   <S.Th>משתמש</S.Th>
+                  <S.Th>אימייל</S.Th>
                   <S.Th>תוכן</S.Th>
                 </tr>
               </thead>
@@ -155,6 +158,7 @@ export function AdminDashboard() {
                   <S.Tr key={t.id}>
                     <S.Td>{formatWhen(t.createdAt)}</S.Td>
                     <S.Td>{t.username}</S.Td>
+                    <S.Td>{t.email || "—"}</S.Td>
                     <S.Td>
                       <S.TicketBody>{t.body}</S.TicketBody>
                     </S.Td>

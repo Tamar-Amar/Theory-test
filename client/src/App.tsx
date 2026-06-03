@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Route,
   Routes,
@@ -243,6 +244,21 @@ function AppShell() {
                 onMode={setAuthMode}
                 onLoggedIn={handleLoggedIn}
               />
+              <p style={{ marginTop: "1.25rem", textAlign: "center", fontSize: "0.9rem" }}>
+                <Link to="/contact">פנייה למערכת (ללא התחברות)</Link>
+              </p>
+            </PageContainer>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <PageContainer>
+              <AppHeader
+                title="תרגול תאוריה"
+                subtitle="פנייה למערכת"
+              />
+              <SupportTicketForm guest />
             </PageContainer>
           }
         />
@@ -346,7 +362,7 @@ function AppShell() {
                 <PracticeSectionTabs />
                 <PersonalStats />
                 <div style={{ marginTop: "2rem" }}>
-                  <SupportTicketForm />
+                  <SupportTicketForm defaultEmail={user.email} />
                 </div>
               </>
             )
