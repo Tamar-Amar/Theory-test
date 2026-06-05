@@ -106,6 +106,21 @@ export const Features = styled.div`
   }
 `;
 
+export const Disclaimer = styled.p`
+  margin: 2.5rem auto 0;
+  max-width: 620px;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.muted};
+  font-size: 0.82rem;
+  line-height: 1.6;
+
+  a {
+    color: ${({ theme }) => theme.colors.accent};
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+`;
+
 export const Feature = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};

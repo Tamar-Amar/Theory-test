@@ -23,6 +23,8 @@ import { AppHeader } from "./components/AppHeader/AppHeader";
 import { AuthPanel } from "./components/AuthPanel/AuthPanel";
 import { ErrorAlert } from "./components/ErrorAlert/ErrorAlert";
 import { LandingPage } from "./components/LandingPage/LandingPage";
+import { LegalPage } from "./components/Legal/LegalPage";
+import { LEGAL_DOCS } from "./components/Legal/legalContent";
 import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
@@ -38,6 +40,38 @@ import { NarrowColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
 
 type Phase = "setup" | "quiz" | "results";
+
+/** דפים משפטיים לאורחים — כל אחד עטוף ב-PageContainer משלו */
+function guestLegalRoutes() {
+  return LEGAL_DOCS.map((doc) => (
+    <Route
+      key={doc.slug}
+      path={`/${doc.slug}`}
+      element={
+        <PageContainer wide showLogin>
+          <NarrowColumn>
+            <LegalPage slug={doc.slug} />
+          </NarrowColumn>
+        </PageContainer>
+      }
+    />
+  ));
+}
+
+/** דפים משפטיים בתוך מעטפת מחוברת/מנהל (ה-PageContainer כבר עוטף בחוץ) */
+function innerLegalRoutes() {
+  return LEGAL_DOCS.map((doc) => (
+    <Route
+      key={doc.slug}
+      path={`/${doc.slug}`}
+      element={
+        <NarrowColumn>
+          <LegalPage slug={doc.slug} />
+        </NarrowColumn>
+      }
+    />
+  ));
+}
 
 function AppShell() {
   const navigate = useNavigate();
@@ -269,6 +303,7 @@ function AppShell() {
             </PageContainer>
           }
         />
+        {guestLegalRoutes()}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
@@ -293,6 +328,7 @@ function AppShell() {
               </NarrowColumn>
             }
           />
+          {innerLegalRoutes()}
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </PageContainer>
@@ -400,6 +436,7 @@ function AppShell() {
             )
           }
         />
+        {innerLegalRoutes()}
         <Route path="*" element={<Navigate to="/profile" replace />} />
       </Routes>
     </PageContainer>

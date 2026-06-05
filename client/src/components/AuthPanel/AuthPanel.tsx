@@ -28,11 +28,16 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const submit = async () => {
     setErr(null);
+    if (mode === "register" && !agreed) {
+      setErr("יש לאשר את תנאי השימוש ומדיניות הפרטיות");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "register") {
@@ -100,7 +105,30 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
           </FormField>
         )}
       </S.FieldsBlock>
-      <PrimaryButton type="button" disabled={busy} onClick={submit}>
+      {mode === "register" && (
+        <S.ConsentRow>
+          <S.ConsentCheckbox
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
+          <span>
+            קראתי ואני מסכים/ה ל
+            <S.ConsentLink to="/terms" target="_blank">
+              תנאי השימוש
+            </S.ConsentLink>{" "}
+            ול
+            <S.ConsentLink to="/privacy" target="_blank">
+              מדיניות הפרטיות
+            </S.ConsentLink>
+          </span>
+        </S.ConsentRow>
+      )}
+      <PrimaryButton
+        type="button"
+        disabled={busy || (mode === "register" && !agreed)}
+        onClick={submit}
+      >
         {busy ? "ממתין…" : mode === "login" ? "כניסה" : "הרשמה"}
       </PrimaryButton>
     </Card>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { DemoQuiz } from "./DemoQuiz";
 import { DEMO_QUESTIONS } from "./demoQuestions";
 import * as S from "./LandingPage.styles";
@@ -96,6 +97,12 @@ export function LandingPage() {
           </S.FaqItem>
         ))}
       </S.Section>
+
+      <S.Disclaimer>
+        אתר זה הוא כלי תרגול עצמאי ואינו קשור למשרד התחבורה או לרשות הרישוי, ואינו
+        מהווה מקור רשמי. השימוש כפוף ל<Link to="/terms">תנאי השימוש</Link>{" "}
+        ול<Link to="/privacy">מדיניות הפרטיות</Link>.
+      </S.Disclaimer>
 
       {demoOpen && <DemoQuiz onClose={() => setDemoOpen(false)} />}
     </>

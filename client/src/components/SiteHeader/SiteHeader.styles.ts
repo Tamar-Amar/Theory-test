@@ -18,8 +18,7 @@ export const Bar = styled.header`
 `;
 
 export const Inner = styled.div<{ $wide?: boolean }>`
-  width: 100%;
-  max-width: ${({ $wide }) => ($wide ? "min(960px, 100%)" : "640px")};
+  width:98%;
   margin: 0 auto;
   display: flex;
   align-items: center;

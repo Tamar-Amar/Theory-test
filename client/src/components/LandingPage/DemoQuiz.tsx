@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { recordDemoFinish } from "../../api";
 import { QuestionImage } from "../QuestionImage/QuestionImage";
 import { DEMO_QUESTIONS } from "./demoQuestions";
@@ -16,6 +16,7 @@ export function DemoQuiz({ onClose }: Props) {
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -24,11 +25,42 @@ export function DemoQuiz({ onClose }: Props) {
     document.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const prevFocused = document.activeElement as HTMLElement | null;
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
+      prevFocused?.focus?.();
     };
   }, [onClose]);
+
+  // מלכודת פוקוס: שומרת את הטאב בתוך הדיאלוג (נגישות)
+  useEffect(() => {
+    const node = modalRef.current;
+    if (!node) return;
+    const getFocusable = () =>
+      Array.from(
+        node.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        )
+      );
+    getFocusable()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const items = getFocusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    node.addEventListener("keydown", onKey);
+    return () => node.removeEventListener("keydown", onKey);
+  }, [finished, index]);
 
   const q = DEMO_QUESTIONS[index];
   const answered = picked !== null;
@@ -71,7 +103,7 @@ export function DemoQuiz({ onClose }: Props) {
       aria-label="מבחן ניסיון"
       onClick={onClose}
     >
-      <S.Modal onClick={(e) => e.stopPropagation()}>
+      <S.Modal ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <S.ModalClose type="button" aria-label="סגירה" onClick={onClose}>
           ✕
         </S.ModalClose>

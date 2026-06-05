@@ -48,7 +48,9 @@ export function SelectField({
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
   const reactId = useId();
-  const listId = `${id ?? reactId}-listbox`;
+  const baseId = id ?? reactId;
+  const listId = `${baseId}-listbox`;
+  const optionId = (i: number) => `${baseId}-opt-${i}`;
 
   const selected = options.find((o) => o.value === value) ?? null;
 
@@ -111,8 +113,13 @@ export function SelectField({
         id={id}
         $open={open}
         disabled={disabled}
+        role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0 ? optionId(activeIndex) : undefined
+        }
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onKeyDown}
@@ -130,6 +137,7 @@ export function SelectField({
             return (
               <S.Option
                 key={opt.value}
+                id={optionId(i)}
                 role="option"
                 aria-selected={isSelected}
                 $selected={isSelected}

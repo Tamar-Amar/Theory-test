@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import rateLimit from "express-rate-limit";
 import { getAdminCredentials } from "../config.js";
 import { UserModel } from "../models/User.js";
 import { signAdminToken, signUserToken } from "../services/jwt.js";
@@ -11,7 +12,24 @@ const router = Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^\S{3,32}$/;
 
-router.post("/register", async (req, res) => {
+/** הגנה מפני ניחוש סיסמאות (brute-force / credential stuffing) */
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "יותר מדי ניסיונות. נסו שוב בעוד מספר דקות" },
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "יותר מדי ניסיונות הרשמה. נסו שוב מאוחר יותר" },
+});
+
+router.post("/register", registerLimiter, async (req, res) => {
   const username =
     typeof req.body?.username === "string" ? req.body.username.trim() : "";
   const email =
@@ -70,7 +88,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const username =
     typeof req.body?.username === "string" ? req.body.username.trim() : "";
   const password =
