@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 
-/** רוחב קבוע למסלול הלשוניות — לא נמתח עם תוכן רחב באזור אישי */
+/** רוחב קבוע למסלול הלשוניות - לא נמתח עם תוכן רחב באזור אישי */
 export const TabsRail = styled.div`
   width: 100%;
   max-width: 760px;

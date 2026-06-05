@@ -57,7 +57,7 @@ export function PersonalStats() {
   }, []);
 
   const pct = (n: number | null) =>
-    n == null ? "—" : `${n}%`;
+    n == null ? "-" : `${n}%`;
 
   const ready = Boolean(!loading && !err && data);
 
@@ -100,7 +100,7 @@ export function PersonalStats() {
                     {data.averageMsPerQuestion != null ? (
                       formatAvgMsPerQuestion(data.averageMsPerQuestion)
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </S.StatValue>
                   <S.StatLabel>ממוצע זמן לשאלה (בכל המבחנים)</S.StatLabel>
@@ -166,7 +166,7 @@ export function PersonalStats() {
                             {a.avgMsPerQuestion != null ? (
                               formatAvgMsPerQuestion(a.avgMsPerQuestion)
                             ) : (
-                              <S.Muted>—</S.Muted>
+                              <S.Muted>-</S.Muted>
                             )}
                           </S.Td>
                           <S.Td>
@@ -211,7 +211,7 @@ export function PersonalStats() {
                               </S.DetailButton>
                             ) : (
                               <S.Muted title="מבחן ישן לפני שמירת פירוט במערכת">
-                                —
+                                -
                               </S.Muted>
                             )}
                           </S.Td>

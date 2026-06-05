@@ -84,6 +84,10 @@ export function AdminDashboard() {
           <S.StatLabel>מבחנים שהושלמו (סה״כ)</S.StatLabel>
         </S.StatCard>
         <S.StatCard>
+          <S.StatValue>{data.demoAttempts}</S.StatValue>
+          <S.StatLabel>מבחני ניסיון שהושלמו</S.StatLabel>
+        </S.StatCard>
+        <S.StatCard>
           <S.StatValue>{withAttempts}</S.StatValue>
           <S.StatLabel>משתמשים עם לפחות מבחן אחד</S.StatLabel>
         </S.StatCard>
@@ -118,8 +122,8 @@ export function AdminDashboard() {
                 {data.users.map((u) => (
                   <S.Tr key={u.userId}>
                     <S.Td>{u.username}</S.Td>
-                    <S.Td>{u.email || "—"}</S.Td>
-                    <S.Td>{u.password || "—"}</S.Td>
+                    <S.Td>{u.email || "-"}</S.Td>
+                    <S.Td>{u.password || "-"}</S.Td>
                     <S.Td>{u.attemptCount}</S.Td>
                     <S.Td>
                       <S.DeleteButton
@@ -158,7 +162,7 @@ export function AdminDashboard() {
                   <S.Tr key={t.id}>
                     <S.Td>{formatWhen(t.createdAt)}</S.Td>
                     <S.Td>{t.username}</S.Td>
-                    <S.Td>{t.email || "—"}</S.Td>
+                    <S.Td>{t.email || "-"}</S.Td>
                     <S.Td>
                       <S.TicketBody>{t.body}</S.TicketBody>
                     </S.Td>

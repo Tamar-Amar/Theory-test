@@ -99,7 +99,7 @@ export type AttemptDetail = {
 
 export type UserStats = {
   attemptsCount: number;
-  /** ממוצע זמן לשאלה במילישניות — מחושב מכל המבחנים שיש בהם נתון זמן */
+  /** ממוצע זמן לשאלה במילישניות - מחושב מכל המבחנים שיש בהם נתון זמן */
   averageMsPerQuestion: number | null;
   averagePercent: number | null;
   bestPercent: number | null;
@@ -113,9 +113,9 @@ export type UserStats = {
     total: number;
     percent: number;
     category: string;
-    /** זמן כולל חלקי מספר שאלות — להשוואה בין מבחנים באורכים שונים */
+    /** זמן כולל חלקי מספר שאלות - להשוואה בין מבחנים באורכים שונים */
     avgMsPerQuestion: number | null;
-    /** מבחנים לפני שמירת פירוט במסד — ללא כפתור פירוט */
+    /** מבחנים לפני שמירת פירוט במסד - ללא כפתור פירוט */
     hasDetails: boolean;
   }[];
 };
@@ -168,6 +168,15 @@ export async function getMeta(): Promise<Meta> {
   return res.json();
 }
 
+/** מדווח על סיום מבחן ניסיון בדף הנחיתה (מונה במסך המנהל). שקט בכישלון. */
+export async function recordDemoFinish(): Promise<void> {
+  try {
+    await fetch(apiUrl("/api/demo/finish"), { method: "POST" });
+  } catch {
+    /* מתעלמים - מדובר במדד בלבד */
+  }
+}
+
 export async function fetchUserStats(): Promise<UserStats> {
   const res = await fetch(apiUrl("/api/stats"), { headers: authHeaders() });
   if (!res.ok) throw new Error(await parseError(res));
@@ -193,6 +202,8 @@ export type AdminUserRow = {
 export type AdminStats = {
   userCount: number;
   totalAttempts: number;
+  /** כמה פעמים סיימו מבחן ניסיון בדף הנחיתה */
+  demoAttempts: number;
   users: AdminUserRow[];
   tickets: AdminTicketRow[];
 };

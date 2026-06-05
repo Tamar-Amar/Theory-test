@@ -11,16 +11,6 @@ export const Bar = styled.div`
   color: ${({ theme }) => theme.colors.muted};
 `;
 
-export const LogoutLink = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.colors.accent};
-  text-decoration: underline;
-  font-size: inherit;
-  padding: 0;
-  cursor: pointer;
-`;
-
 export const Strong = styled.strong`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};

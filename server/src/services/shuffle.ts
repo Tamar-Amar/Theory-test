@@ -7,7 +7,7 @@ export function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-/** ערבוב פישר–ייטס — אינדקס נכון אחרי ערבוב */
+/** ערבוב פישר–ייטס - אינדקס נכון אחרי ערבוב */
 export function shuffleOptions<T>(options: T[], correctIndex: number) {
   const indices = options.map((_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {

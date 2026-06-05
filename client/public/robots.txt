@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# אזורים אישיים / מנהל אינם מועילים למנועי חיפוש
+Disallow: /admin
+Disallow: /profile
+
+# TODO: עדכני לכתובת האתר האמיתית שלך אם יש דומיין מותאם
+Sitemap: https://theory-test-drab.vercel.app

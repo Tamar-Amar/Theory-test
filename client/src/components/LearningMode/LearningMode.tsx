@@ -104,7 +104,7 @@ export function LearningMode({ questions, onExit }: Props) {
     if (stage === "learn") return "לומדים את התשובה הנכונה לפני המשחק";
     if (stage === "memory")
       return "משחק זיכרון על האפשרויות של השאלה הזו בלבד";
-    return "עכשיו בודקים אם הפנמת";
+    return "עכשיו בודקים אם הפנמתם";
   }, [done, stage]);
 
   const onFlip = (index: number) => {
@@ -133,7 +133,7 @@ export function LearningMode({ questions, onExit }: Props) {
       <Card>
         <S.ResultBox>
           <S.ResultTitle>אין כרגע שאלות ללמידה</S.ResultTitle>
-          <S.ResultLine>נסי לבחור נושא אחר או כמות קטנה יותר.</S.ResultLine>
+          <S.ResultLine>נסו לבחור נושא אחר או כמות קטנה יותר.</S.ResultLine>
           <S.Row>
             <PrimaryButton type="button" onClick={onExit}>
               חזרה לתרגול
@@ -180,7 +180,7 @@ export function LearningMode({ questions, onExit }: Props) {
                 ))}
               </S.LearnOptionList>
               <S.LearnExplain>
-                שימי לב: התשובה הנכונה מסומנת בצבע. זוכרים אותה ועוברים למשחק זיכרון.
+                שימו לב: התשובה הנכונה מסומנת בצבע. זוכרים אותה ועוברים למשחק זיכרון.
               </S.LearnExplain>
               <S.Row>
                 <PrimaryButton type="button" onClick={() => setStage("memory")}>
@@ -269,9 +269,9 @@ export function LearningMode({ questions, onExit }: Props) {
       {done && (
         <Card>
           <S.ResultBox>
-            <S.ResultTitle>סיימת סשן למידה 🎉</S.ResultTitle>
+            <S.ResultTitle>סיימתם סשן למידה 🎉</S.ResultTitle>
             <S.ResultLine>
-              הצלחת נכון ב-{testCorrectCount} מתוך {questions.length} בשלב הבחינה.
+              הצלחתם נכון ב-{testCorrectCount} מתוך {questions.length} בשלב הבחינה.
             </S.ResultLine>
             <S.Row>
               <PrimaryButton type="button" onClick={onExit}>

@@ -2,17 +2,28 @@ import type { ReactNode } from "react";
 import { Fragment } from "react";
 import { APP_VERSION } from "../../version";
 import { LINKEDIN_PROFILE_URL } from "../../constants/links";
+import { SiteHeader } from "../SiteHeader/SiteHeader";
 import * as S from "./PageContainer.styles";
 
 type Props = {
   children: ReactNode;
   /** רוחב מורחב (למשל אזור אישי עם גרפים) */
   wide?: boolean;
+  /** הצגת אייקון התחברות בכותרת (לאורחים) */
+  showLogin?: boolean;
+  /** כשמועבר — המשתמש מחובר וה־header מציג התנתקות */
+  onLogout?: () => void;
 };
 
-export function PageContainer({ children, wide = false }: Props) {
+export function PageContainer({
+  children,
+  wide = false,
+  showLogin = false,
+  onLogout,
+}: Props) {
   return (
     <Fragment>
+      <SiteHeader wide={wide} showLogin={showLogin} onLogout={onLogout} />
       <S.Wrapper $wide={wide}>
         <S.Main>{children}</S.Main>
       </S.Wrapper>

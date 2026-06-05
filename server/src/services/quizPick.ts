@@ -15,9 +15,19 @@ export async function pickQuestionsForQuiz(
   userId: mongoose.Types.ObjectId,
   count: number,
   category: string,
-  focusWeak: boolean
+  focusWeak: boolean,
+  excludeImages = false
 ): Promise<QuestionForQuiz[]> {
-  const filter = category ? { category } : {};
+  const noImage = excludeImages
+    ? {
+        $or: [
+          { imageUrl: { $exists: false } },
+          { imageUrl: null },
+          { imageUrl: "" },
+        ],
+      }
+    : {};
+  const filter = { ...(category ? { category } : {}), ...noImage };
   const total = await QuestionModel.countDocuments(filter);
   if (total < count) {
     throw new Error("INSUFFICIENT_QUESTIONS");
@@ -45,7 +55,7 @@ export async function pickQuestionsForQuiz(
 
   const weakDocs =
     weakIds.length > 0
-      ? await QuestionModel.find({ _id: { $in: weakIds } }).lean()
+      ? await QuestionModel.find({ _id: { $in: weakIds }, ...noImage }).lean()
       : [];
 
   const weakById = new Map(

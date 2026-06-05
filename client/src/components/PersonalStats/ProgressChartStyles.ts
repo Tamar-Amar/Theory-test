@@ -130,7 +130,7 @@ export const DonutCaption = styled.span`
   margin-top: 0.1rem;
 `;
 
-/** טקסט משני מתחת לדונאט — עמודה כדי למנוע שבירה מוזרה בתוך עיגול צר */
+/** טקסט משני מתחת לדונאט - עמודה כדי למנוע שבירה מוזרה בתוך עיגול צר */
 export const DonutSub = styled.div`
   display: flex;
   flex-direction: column;
@@ -159,7 +159,7 @@ export const BarsBlock = styled.div`
   justify-content: center;
 `;
 
-/** כיתוב + עמודות — ממורכזים בתוך חצי הכרטיס (לצד הדונאט) */
+/** כיתוב + עמודות - ממורכזים בתוך חצי הכרטיס (לצד הדונאט) */
 export const BarsChartGroup = styled.div`
   display: flex;
   flex-direction: column;

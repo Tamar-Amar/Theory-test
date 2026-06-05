@@ -27,7 +27,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-/** ממלא req.authUser אם יש Bearer תקין — בלי לחסום בקשות אורח */
+/** ממלא req.authUser אם יש Bearer תקין - בלי לחסום בקשות אורח */
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   const token =
@@ -36,7 +36,7 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
     try {
       attachAuthUser(req, token);
     } catch {
-      /* אורח — מתעלמים מטוקן לא תקין */
+      /* אורח - מתעלמים מטוקן לא תקין */
     }
   }
   next();
@@ -56,7 +56,7 @@ function attachAuthUser(req: Request, token: string) {
   };
 }
 
-/** משתמש רגיל בלבד — לא מנהל (מבחנים וסטטיסטיקות אישיות) */
+/** משתמש רגיל בלבד - לא מנהל (מבחנים וסטטיסטיקות אישיות) */
 export function requireRegularUser(
   req: Request,
   res: Response,

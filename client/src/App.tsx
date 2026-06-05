@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BrowserRouter,
-  Link,
   Navigate,
   Route,
   Routes,
-  useLocation,
   useNavigate,
 } from "react-router-dom";
 import {
@@ -24,6 +22,7 @@ import { AdminDashboard } from "./components/AdminDashboard/AdminDashboard";
 import { AppHeader } from "./components/AppHeader/AppHeader";
 import { AuthPanel } from "./components/AuthPanel/AuthPanel";
 import { ErrorAlert } from "./components/ErrorAlert/ErrorAlert";
+import { LandingPage } from "./components/LandingPage/LandingPage";
 import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
@@ -34,14 +33,15 @@ import { QuizView } from "./components/QuizView/QuizView";
 import { ResultsView } from "./components/ResultsView/ResultsView";
 import { SupportTicketForm } from "./components/SupportTicketForm/SupportTicketForm";
 import { UserBar } from "./components/UserBar/UserBar";
+import { NARROW_SCREEN_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
+import { NarrowColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
 
 type Phase = "setup" | "quiz" | "results";
 
 function AppShell() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const wideProfileLayout = pathname === "/profile" || pathname === "/learning";
+  const isNarrowScreen = useMediaQuery(NARROW_SCREEN_QUERY);
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -215,7 +215,7 @@ function AppShell() {
     setQuestions([]);
     setAnswers([]);
     setResult(null);
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   const q = questions[current];
@@ -232,6 +232,14 @@ function AppShell() {
     return (
       <Routes>
         <Route
+          path="/"
+          element={
+            <PageContainer wide showLogin>
+              <LandingPage />
+            </PageContainer>
+          }
+        />
+        <Route
           path="/login"
           element={
             <PageContainer>
@@ -244,44 +252,47 @@ function AppShell() {
                 onMode={setAuthMode}
                 onLoggedIn={handleLoggedIn}
               />
-              <p style={{ marginTop: "1.25rem", textAlign: "center", fontSize: "0.9rem" }}>
-                <Link to="/contact">פנייה למערכת (ללא התחברות)</Link>
-              </p>
             </PageContainer>
           }
         />
         <Route
           path="/contact"
           element={
-            <PageContainer>
-              <AppHeader
-                title="תרגול תאוריה"
-                subtitle="פנייה למערכת"
-              />
-              <SupportTicketForm guest />
+            <PageContainer showLogin wide>
+              <NarrowColumn>
+                <AppHeader
+                  title="תרגול תאוריה"
+                  subtitle="פנייה למערכת"
+                />
+                <SupportTicketForm guest />
+              </NarrowColumn>
             </PageContainer>
           }
         />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
 
   if (user.admin) {
     return (
-      <PageContainer wide={false}>
+      <PageContainer wide={false} onLogout={logout}>
         <AppHeader
           title="תרגול תאוריה"
-          subtitle="לוח בקרה — מנהל"
+          subtitle="לוח בקרה - מנהל"
         >
-          <UserBar
-            username={user.username}
-            email={user.email}
-            onLogout={logout}
-          />
+          <UserBar username={user.username} email={user.email} />
         </AppHeader>
         <Routes>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route
+            path="/contact"
+            element={
+              <NarrowColumn>
+                <SupportTicketForm guest />
+              </NarrowColumn>
+            }
+          />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </PageContainer>
@@ -289,16 +300,12 @@ function AppShell() {
   }
 
   return (
-    <PageContainer wide={wideProfileLayout}>
+    <PageContainer wide onLogout={logout}>
       <AppHeader
         title="תרגול תאוריה"
         subtitle="תרגול עם מיקוד על פי תוצאות בחינות קודמות"
       >
-        <UserBar
-          username={user.username}
-          email={user.email}
-          onLogout={logout}
-        />
+        <UserBar username={user.username} email={user.email} />
       </AppHeader>
 
       {error && <ErrorAlert>{error}</ErrorAlert>}
@@ -310,9 +317,9 @@ function AppShell() {
           path="/practice"
           element={
             <>
-              {phase === "setup" && (
-                <>
-                  <PracticeSectionTabs />
+              {phase === "setup" && <PracticeSectionTabs />}
+              <NarrowColumn>
+                {phase === "setup" && (
                   <QuizSetup
                     meta={meta}
                     loadingMeta={loadingMeta}
@@ -323,32 +330,32 @@ function AppShell() {
                     onCategory={setCategory}
                     onStart={handleStart}
                   />
-                </>
-              )}
-              {phase === "quiz" && q && (
-                <QuizView
-                  question={q}
-                  questionIndex={current}
-                  total={questions.length}
-                  progressPercent={progress}
-                  elapsedMs={elapsed}
-                  selectedIndex={selectedForCurrent}
-                  answers={answers}
-                  onSelectOption={pickOption}
-                  onPrev={goPrev}
-                  onNext={goNext}
-                  onFinish={handleFinish}
-                />
-              )}
-              {phase === "results" && result && (
-                <ResultsView
-                  result={result}
-                  questions={questions}
-                  elapsedMs={elapsed}
-                  onAgain={() => resetToPath("/practice")}
-                  onGoHome={() => resetToPath("/profile")}
-                />
-              )}
+                )}
+                {phase === "quiz" && q && (
+                  <QuizView
+                    question={q}
+                    questionIndex={current}
+                    total={questions.length}
+                    progressPercent={progress}
+                    elapsedMs={elapsed}
+                    selectedIndex={selectedForCurrent}
+                    answers={answers}
+                    onSelectOption={pickOption}
+                    onPrev={goPrev}
+                    onNext={goNext}
+                    onFinish={handleFinish}
+                  />
+                )}
+                {phase === "results" && result && (
+                  <ResultsView
+                    result={result}
+                    questions={questions}
+                    elapsedMs={elapsed}
+                    onAgain={() => resetToPath("/practice")}
+                    onGoHome={() => resetToPath("/profile")}
+                  />
+                )}
+              </NarrowColumn>
             </>
           }
         />
@@ -371,13 +378,25 @@ function AppShell() {
         <Route
           path="/learning"
           element={
-            phase !== "setup" ? (
+            isNarrowScreen || phase !== "setup" ? (
               <Navigate to="/practice" replace />
             ) : (
               <>
                 <PracticeSectionTabs />
                 <LearningArea meta={meta} loadingMeta={loadingMeta} />
               </>
+            )
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            phase !== "setup" ? (
+              <Navigate to="/practice" replace />
+            ) : (
+              <NarrowColumn>
+                <SupportTicketForm defaultEmail={user.email} />
+              </NarrowColumn>
             )
           }
         />

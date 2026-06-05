@@ -40,7 +40,7 @@ function pickWeightedIds(
 }
 
 /**
- * עדכון סטטיסטיקה — בלי התנגשות אופרטורים ב-MongoDB:
+ * עדכון סטטיסטיקה - בלי התנגשות אופרטורים ב-MongoDB:
  * אסור לשלב $setOnInsert על שדה שמופיע גם ב-$inc / $set (PlanExecutor error).
  * ב-upsert: רק userId+questionId ב-setOnInsert; $inc על שדה חדש מתחיל מערך הנכון.
  */

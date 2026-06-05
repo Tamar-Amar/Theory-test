@@ -6,6 +6,7 @@ import { AttemptModel } from "../models/Attempt.js";
 import { UserQuestionStatModel } from "../models/UserQuestionStat.js";
 import { UserModel } from "../models/User.js";
 import { SupportTicketModel } from "../models/SupportTicket.js";
+import { CounterModel, DEMO_FINISH_COUNTER } from "../models/Counter.js";
 import { shuffleOptions } from "../services/shuffle.js";
 import { requireAuth, requireRegularUser, optionalAuth } from "../middleware/auth.js";
 import { pickQuestionsForQuiz } from "../services/quizPick.js";
@@ -63,6 +64,15 @@ router.get("/meta", async (_req, res) => {
     questionCount: count,
     categories: categories.filter(Boolean).sort(),
   });
+});
+
+router.post("/demo/finish", async (_req, res) => {
+  await CounterModel.updateOne(
+    { name: DEMO_FINISH_COUNTER },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  );
+  res.status(204).send();
 });
 
 router.get("/stats", requireAuth, requireRegularUser, async (req, res) => {
@@ -345,24 +355,38 @@ router.post(
       typeof req.body?.category === "string" ? req.body.category.trim() : "";
     const focusWeak = true;
 
-    const filter = category ? { category } : {};
+    // משחק ההתאמות אינו תומך בשאלות עם תמונה — סופרים ובוחרים רק שאלות ללא תמונה
+    const noImage = {
+      $or: [
+        { imageUrl: { $exists: false } },
+        { imageUrl: null },
+        { imageUrl: "" },
+      ],
+    };
+    const filter = { ...(category ? { category } : {}), ...noImage };
     const total = await QuestionModel.countDocuments(filter);
     if (total < count) {
       return res.status(400).json({
         error:
           total === 0
-            ? "אין שאלות במסד. יש לטעון שאלות ל־MongoDB (למשל ייבוא למאגר questions)."
-            : `לא מספיק שאלות בקטגוריה: במסד ${total}, נבחרו ${count} ללמידה.`,
+            ? "אין מספיק שאלות ללא תמונה בקטגוריה זו למשחק ההתאמות."
+            : `לא מספיק שאלות ללא תמונה בקטגוריה: במסד ${total}, נדרשות ${count} ללמידה.`,
       });
     }
 
     let picked: Awaited<ReturnType<typeof pickQuestionsForQuiz>>;
     try {
-      picked = await pickQuestionsForQuiz(userId, count, category, focusWeak);
+      picked = await pickQuestionsForQuiz(
+        userId,
+        count,
+        category,
+        focusWeak,
+        true
+      );
     } catch (e) {
       if (e instanceof Error && e.message === "INSUFFICIENT_QUESTIONS") {
         return res.status(400).json({
-          error: "לא מספיק שאלות לבניית יחידת הלמידה.",
+          error: "לא מספיק שאלות ללא תמונה לבניית יחידת הלמידה.",
         });
       }
       throw e;

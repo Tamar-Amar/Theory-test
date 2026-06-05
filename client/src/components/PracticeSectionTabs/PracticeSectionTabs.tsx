@@ -1,3 +1,4 @@
+import { NARROW_SCREEN_QUERY, useMediaQuery } from "../../hooks/useMediaQuery";
 import * as S from "./PracticeSectionTabs.styles";
 
 export type PracticeSection = "practice" | "profile" | "learning";
@@ -38,6 +39,8 @@ function LearningIcon() {
 }
 
 export function PracticeSectionTabs() {
+  const narrow = useMediaQuery(NARROW_SCREEN_QUERY);
+
   return (
     <S.TabsRail>
       <S.Tabs role="tablist" aria-label="אזור אפליקציה">
@@ -50,12 +53,14 @@ export function PracticeSectionTabs() {
         <S.TabNav to="/practice" end role="tab">
           תרגול
         </S.TabNav>
-        <S.TabNav to="/learning" end role="tab">
-          <S.TabInner>
-            <LearningIcon />
-            אזור למידה
-          </S.TabInner>
-        </S.TabNav>
+        {!narrow && (
+          <S.TabNav to="/learning" end role="tab">
+            <S.TabInner>
+              <LearningIcon />
+              אזור למידה
+            </S.TabInner>
+          </S.TabNav>
+        )}
       </S.Tabs>
     </S.TabsRail>
   );

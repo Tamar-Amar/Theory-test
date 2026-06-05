@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { AttemptModel } from "../models/Attempt.js";
 import { SupportTicketModel } from "../models/SupportTicket.js";
 import { UserModel } from "../models/User.js";
+import { CounterModel, DEMO_FINISH_COUNTER } from "../models/Counter.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import { deleteUserAndRelatedData } from "../services/deleteUserCascade.js";
 
@@ -25,6 +26,10 @@ router.delete("/users/:userId", async (req, res) => {
 router.get("/stats", async (_req, res) => {
   const userCount = await UserModel.countDocuments();
   const totalAttempts = await AttemptModel.countDocuments();
+  const demoCounter = await CounterModel.findOne({
+    name: DEMO_FINISH_COUNTER,
+  }).lean();
+  const demoAttempts = (demoCounter as { count?: number } | null)?.count ?? 0;
 
   const usersRaw = await UserModel.aggregate([
     {
@@ -71,6 +76,7 @@ router.get("/stats", async (_req, res) => {
   res.json({
     userCount,
     totalAttempts,
+    demoAttempts,
     users,
     tickets,
   });

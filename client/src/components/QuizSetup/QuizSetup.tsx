@@ -1,11 +1,17 @@
 import type { Meta } from "../../api";
 import { Card } from "../Card/Card";
-import { FormField, FieldSelect } from "../FormField/FormField";
+import { FormField } from "../FormField/FormField";
+import { SelectField } from "../SelectField/SelectField";
 import { SmartModeInfo } from "../SmartModeInfo/SmartModeInfo";
 import { PrimaryButton } from "../Button/Button";
 import { LoadingState } from "../LoadingState/LoadingState";
 
 const COUNTS = [5, 10, 15, 20, 30] as const;
+
+const COUNT_OPTIONS = COUNTS.map((n) => ({
+  value: String(n),
+  label: `${n} שאלות`,
+}));
 
 type Props = {
   meta: Meta | null;
@@ -36,31 +42,28 @@ export function QuizSetup({
         ) : (
           <>
             <FormField id="count" label="כמה שאלות במבחן?">
-              <FieldSelect
+              <SelectField
                 id="count"
-                value={count}
-                onChange={(e) => onCount(Number(e.target.value))}
-              >
-                {COUNTS.map((n) => (
-                  <option key={n} value={n}>
-                    {n} שאלות
-                  </option>
-                ))}
-              </FieldSelect>
+                value={String(count)}
+                options={COUNT_OPTIONS}
+                onChange={(v) => onCount(Number(v))}
+                ariaLabel="כמה שאלות במבחן"
+              />
             </FormField>
             <FormField id="cat" label="נושא (אופציונלי)">
-              <FieldSelect
+              <SelectField
                 id="cat"
                 value={category}
-                onChange={(e) => onCategory(e.target.value)}
-              >
-                <option value="">הכל — מעורבב</option>
-                {(meta?.categories || []).map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </FieldSelect>
+                options={[
+                  { value: "", label: "הכל - מעורבב" },
+                  ...(meta?.categories || []).map((c) => ({
+                    value: c,
+                    label: c,
+                  })),
+                ]}
+                onChange={onCategory}
+                ariaLabel="נושא המבחן"
+              />
             </FormField>
             <SmartModeInfo />
             <PrimaryButton
@@ -68,7 +71,7 @@ export function QuizSetup({
               disabled={starting || !meta?.questionCount}
               onClick={onStart}
             >
-              {starting ? "פותח מבחן…" : "התחל מבחן"}
+              {starting ? "פותחים מבחן…" : "התחילו מבחן"}
             </PrimaryButton>
           </>
         )}

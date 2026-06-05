@@ -4,7 +4,7 @@ import * as S from "./ProgressChartStyles";
 type AttemptRow = UserStats["recentAttempts"][number];
 
 type Props = {
-  /** כיסוי שקוף + תג «טוען» — הכרטיס נשאר בגובה קבוע */
+  /** כיסוי שקוף + תג «טוען» - הכרטיס נשאר בגובה קבוע */
   loading?: boolean;
   recentAttempts: AttemptRow[];
   totalCorrect: number;
@@ -68,7 +68,7 @@ export function ProgressChart({
             <DonutRing percent={loading ? null : overallPct} />
             <S.DonutCenter dir="rtl">
               <S.DonutValue dir="ltr">
-                {loading ? "…" : overallPct == null ? "—" : `${overallPct}%`}
+                {loading ? "…" : overallPct == null ? "-" : `${overallPct}%`}
               </S.DonutValue>
               <S.DonutCaption>דיוק כולל</S.DonutCaption>
               <S.DonutSub>
@@ -124,8 +124,8 @@ export function ProgressChart({
             <S.BarsEmptyState>
               <S.BarsEmptyTitle>עדיין אין מבחנים בגרף</S.BarsEmptyTitle>
               <S.BarsEmptyHint>
-                אחרי שתשלימי מבחן בלשונית «תרגול», העמודות יראו את אחוז
-                ההצלחה בכל ניסיון — עד 15 האחרונים.
+                אחרי שתשלימו מבחן בלשונית «תרגול», העמודות יראו את אחוז
+                ההצלחה בכל ניסיון - עד 15 האחרונים.
               </S.BarsEmptyHint>
             </S.BarsEmptyState>
           )}

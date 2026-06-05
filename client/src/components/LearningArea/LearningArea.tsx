@@ -6,7 +6,8 @@ import {
 } from "../../api";
 import { PrimaryButton, SecondaryButton } from "../Button/Button";
 import { Card } from "../Card/Card";
-import { FormField, FieldSelect } from "../FormField/FormField";
+import { FormField } from "../FormField/FormField";
+import { SelectField } from "../SelectField/SelectField";
 import { LoadingState } from "../LoadingState/LoadingState";
 import * as S from "./LearningArea.styles";
 
@@ -74,7 +75,7 @@ function toPairs(questions: LearningQuestion[]): {
     as.push({
       id: `a-${pairId}`,
       pairId,
-      text: q.options[q.correctIndex] ?? "—",
+      text: q.options[q.correctIndex] ?? "-",
     });
   }
   return { questions: qs, answers: shuffle(as) };
@@ -102,6 +103,10 @@ export function LearningArea({ meta, loadingMeta }: Props) {
 
   const foundPairs = useMemo(() => matchedPairIds.length, [matchedPairIds.length]);
   const allDone = questionsDeck.length > 0 && foundPairs === questionsDeck.length;
+  const hasImages = useMemo(
+    () => questionsDeck.some((q) => Boolean(q.imageUrl)),
+    [questionsDeck]
+  );
 
   useEffect(() => {
     if (allDone) {
@@ -111,7 +116,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
 
   const startGame = async () => {
     if (!category) {
-      setErr("בחרי קטגוריה לפני התחלת המשחק");
+      setErr("בחרו קטגוריה לפני התחלת המשחק");
       return;
     }
     setErr(null);
@@ -160,7 +165,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
       return;
     }
     setWrongPairPing(true);
-    setErr("זה לא זוג תואם, נסי שוב");
+    setErr("זה לא זוג תואם, נסו שוב");
     window.setTimeout(() => setWrongPairPing(false), 380);
   };
 
@@ -204,22 +209,21 @@ export function LearningArea({ meta, loadingMeta }: Props) {
           ) : (
             <>
               <S.Intro>
-                בחרי קטגוריה והמערכת תיצור משחק התאמות עם 5 שאלות ו-5 תשובות נכונות.
+                בחרו קטגוריה והמערכת תיצור משחק התאמות עם 5 שאלות ו-5 תשובות נכונות.
                 אפשר לגרור שאלה לתשובה או לבחור בלחיצה.
               </S.Intro>
               <div style={{ marginTop: "0.9rem" }}>
                 <FormField id="learning-category" label="קטגוריית לימוד">
-                  <FieldSelect
+                  <SelectField
                     id="learning-category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    {(meta?.categories || []).map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </FieldSelect>
+                    options={(meta?.categories || []).map((c) => ({
+                      value: c,
+                      label: c,
+                    }))}
+                    onChange={setCategory}
+                    ariaLabel="קטגוריית לימוד"
+                  />
                 </FormField>
               </div>
               {err ? <S.Note>{err}</S.Note> : null}
@@ -229,7 +233,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
                   onClick={startGame}
                   disabled={loadingGame || !(meta?.categories?.length ?? 0)}
                 >
-                  {loadingGame ? "מכין משחק…" : "התחל משחק זיכרון"}
+                  {loadingGame ? "מכינים משחק…" : "התחילו משחק זיכרון"}
                 </PrimaryButton>
               </S.Actions>
             </>
@@ -258,6 +262,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
                       draggable={mode === "game" && !donePair}
                       $matched={donePair}
                       $selected={selectedQuestionId === q.id}
+                      $hasImages={hasImages}
                       style={donePair ? pairStyle(q.pairId) : undefined}
                       disabled={mode === "done" || donePair}
                       onDragStart={() => setDragQuestionId(q.id)}
@@ -267,7 +272,9 @@ export function LearningArea({ meta, loadingMeta }: Props) {
                       }}
                       onClick={() => onClickQuestion(q.id)}
                     >
-                      <S.CardText>{q.text}</S.CardText>
+                      <S.CardText $clamp={q.imageUrl ? 2 : 3}>
+                        {q.text}
+                      </S.CardText>
                       {q.imageUrl ? (
                         <S.CardImage
                           src={q.imageUrl}
@@ -293,6 +300,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
                       type="button"
                       $matched={donePair}
                       $dropOver={dropOverAnswerId === a.id}
+                      $hasImages={hasImages}
                       style={donePair ? pairStyle(a.pairId) : undefined}
                       disabled={mode === "done" || donePair}
                       onClick={() => onClickAnswer(a.id)}
@@ -316,7 +324,7 @@ export function LearningArea({ meta, loadingMeta }: Props) {
               </S.List>
             </S.Column>
           </S.MatchBoard>
-          {wrongPairPing ? <S.WrongHint>לא תואם, נסי התאמה אחרת</S.WrongHint> : null}
+          {wrongPairPing ? <S.WrongHint>לא תואם, נסו התאמה אחרת</S.WrongHint> : null}
           <S.Note>התאמה נכונה: שאלה בצד ימין ותשובה נכונה בצד שמאל.</S.Note>
           {mode === "game" && (
             <S.Actions>
@@ -327,8 +335,8 @@ export function LearningArea({ meta, loadingMeta }: Props) {
           )}
           {mode === "done" && (
             <S.ResultBox>
-              <S.ResultTitle>כל הכבוד! השלמת את כל 5 הזוגות 🎉</S.ResultTitle>
-              <S.ResultText>סיימת ב־{moves} מהלכים.</S.ResultText>
+              <S.ResultTitle>כל הכבוד! השלמתם את כל 5 הזוגות 🎉</S.ResultTitle>
+              <S.ResultText>סיימתם ב־{moves} מהלכים.</S.ResultText>
               <S.Actions>
                 <SecondaryButton type="button" onClick={resetToSetup}>
                   בחירת קטגוריה אחרת

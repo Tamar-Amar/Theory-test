@@ -13,7 +13,7 @@ type Props = {
   result: SubmitResponse;
   questions: QuizQuestion[];
   elapsedMs: number;
-  /** מבחן נוסף — לשונית תרגול */
+  /** מבחן נוסף - לשונית תרגול */
   onAgain: () => void;
   /** עמוד ראשי עם לשוניות תרגול / אזור אישי */
   onGoHome: () => void;

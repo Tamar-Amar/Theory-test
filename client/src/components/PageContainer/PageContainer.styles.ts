@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { HEADER_HEIGHT } from "../SiteHeader/SiteHeader.styles";
 
 /** מקום לפוטר קבוע בתחתית המסך */
 const FOOTER_RESERVE = "3.5rem";
@@ -6,7 +7,8 @@ const FOOTER_RESERVE = "3.5rem";
 export const Wrapper = styled.div<{ $wide?: boolean }>`
   max-width: ${({ $wide }) => ($wide ? "min(960px, 100%)" : "640px")};
   margin: 0 auto;
-  padding: 1.5rem 1.25rem calc(${FOOTER_RESERVE} + env(safe-area-inset-bottom, 0px));
+  padding: calc(${HEADER_HEIGHT} + 1.25rem) 1.25rem
+    calc(${FOOTER_RESERVE} + env(safe-area-inset-bottom, 0px));
   min-height: 100dvh;
   box-sizing: border-box;
 `;

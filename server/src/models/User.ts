@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
     passwordHash: { type: String, required: true },
-    /** לצפייה מנהל בלבד — נשמר בהרשמה */
+    /** לצפייה מנהל בלבד - נשמר בהרשמה */
     passwordPlain: { type: String },
   },
   { collection: "users" }

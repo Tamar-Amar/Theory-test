@@ -4,6 +4,9 @@ export const Wrap = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 80%;
+  align-self: center;
+  margin-inline: auto;
 `;
 
 export const Intro = styled.p`
@@ -81,9 +84,10 @@ export const MatchCard = styled.button<{
   $matched: boolean;
   $selected?: boolean;
   $dropOver?: boolean;
+  $hasImages?: boolean;
 }>`
-  min-height: 188px;
-  max-height: 188px;
+  min-height: ${({ $hasImages }) => ($hasImages ? "132px" : "78px")};
+  max-height: ${({ $hasImages }) => ($hasImages ? "132px" : "78px")};
   border-radius: ${({ theme }) => theme.radius.control};
   border: 1px solid
     ${({ theme, $matched, $selected, $dropOver }) =>
@@ -133,16 +137,16 @@ export const MatchCard = styled.button<{
   }
 
   @media (max-width: 700px) {
-    min-height: 164px;
-    max-height: 164px;
+    min-height: ${({ $hasImages }) => ($hasImages ? "120px" : "72px")};
+    max-height: ${({ $hasImages }) => ($hasImages ? "120px" : "72px")};
   }
 `;
 
-export const CardText = styled.span`
+export const CardText = styled.span<{ $clamp?: number }>`
   font-size: 0.9rem;
   line-height: 1.42;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: ${({ $clamp }) => $clamp ?? 3};
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
@@ -150,7 +154,7 @@ export const CardText = styled.span`
 export const CardImage = styled.img`
   display: block;
   width: 100%;
-  max-height: 76px;
+  max-height: 60px;
   object-fit: contain;
   border-radius: ${({ theme }) => theme.radius.option};
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};

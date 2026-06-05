@@ -1,4 +1,4 @@
-# Theory practice — developer guide
+# Theory practice - developer guide
 
 Full-stack app: **Node** (Express + MongoDB + JWT) and **React** (Vite + TypeScript + styled-components).  
 Questions are stored in MongoDB (`questions` collection). RTL UI for Hebrew learners.
@@ -53,7 +53,7 @@ See `server/.env.example` for a template.
 
 ---
 
-## Vercel — what to set in Environment Variables
+## Vercel - what to set in Environment Variables
 
 Use **two Vercel projects** (recommended): one for the client, one for the API **or** host the API on Render/Fly/Railway and only put the client on Vercel.
 
@@ -70,7 +70,7 @@ Use **two Vercel projects** (recommended): one for the client, one for the API *
 - Build command: `npm run build`  
 - Output directory: `dist`  
 
-`VITE_*` variables are baked in at **build time** — after changing them, trigger a **new deployment**.
+`VITE_*` variables are baked in at **build time** - after changing them, trigger a **new deployment**.
 
 ### 2) Backend project (only if the API is deployed on Vercel)
 
