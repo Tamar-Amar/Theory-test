@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { QuestionModel } from "../models/Question.js";
-import { pickWeakQuestionIds } from "./userStats.js";
+import { getMasteredQuestionIds, pickWeakQuestionIds } from "./userStats.js";
 import { shuffleArray } from "./shuffle.js";
 
 export type QuestionForQuiz = {
@@ -28,22 +28,31 @@ export async function pickQuestionsForQuiz(
       }
     : {};
   const filter = { ...(category ? { category } : {}), ...noImage };
-  const total = await QuestionModel.countDocuments(filter);
+  const masteredIds = await getMasteredQuestionIds(userId);
+  const availableFilter =
+    masteredIds.length > 0
+      ? { ...filter, _id: { $nin: masteredIds } }
+      : filter;
+
+  const total = await QuestionModel.countDocuments(availableFilter);
   if (total < count) {
     throw new Error("INSUFFICIENT_QUESTIONS");
   }
 
   let weakIds: mongoose.Types.ObjectId[] = [];
   if (focusWeak) {
-    const weakTarget = Math.min(Math.ceil(count * 0.62), count);
+    const weakTarget = Math.min(Math.ceil(count * 0.5), count);
     weakIds = await pickWeakQuestionIds(userId, category, weakTarget);
   }
 
+  const withExcluded = (extra: mongoose.Types.ObjectId[]) => {
+    const nin = [...masteredIds, ...extra];
+    if (!nin.length) return filter;
+    return { ...filter, _id: { $nin: nin } };
+  };
+
   const remaining = count - weakIds.length;
-  const matchRandom: Record<string, unknown> = { ...filter };
-  if (weakIds.length) {
-    matchRandom._id = { $nin: weakIds };
-  }
+  const matchRandom = withExcluded(weakIds);
 
   const randomDocs =
     remaining > 0
@@ -68,17 +77,10 @@ export async function pickQuestionsForQuiz(
   let merged = [...weakOrdered, ...randomDocs];
 
   if (merged.length < count) {
-    const have = new Set(merged.map((q) => String(q._id)));
+    const haveIds = merged.map((q) => q._id);
     const need = count - merged.length;
     const topUp = (await QuestionModel.aggregate([
-      {
-        $match: {
-          ...filter,
-          _id: {
-            $nin: [...have].map((id) => new mongoose.Types.ObjectId(id)),
-          },
-        },
-      },
+      { $match: withExcluded([...weakIds, ...haveIds]) },
       { $sample: { size: need } },
     ])) as QuestionForQuiz[];
     merged = [...merged, ...topUp];

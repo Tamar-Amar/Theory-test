@@ -82,6 +82,7 @@ export async function pickWeakQuestionIds(
   const stats = await UserQuestionStatModel.find({
     userId,
     totalWrong: { $gt: 0 },
+    totalCorrect: 0,
   }).lean();
 
   if (!stats.length) return [];
@@ -111,4 +112,19 @@ export async function pickWeakQuestionIds(
   if (!ranked.length) return [];
 
   return pickWeightedIds(ranked, Math.min(maxPick, ranked.length));
+}
+
+/** שאלות שענו עליהן נכון לפחות פעם — לא מוצגות שוב */
+export async function getMasteredQuestionIds(
+  userId: mongoose.Types.ObjectId
+): Promise<mongoose.Types.ObjectId[]> {
+  const stats = await UserQuestionStatModel.find({
+    userId,
+    totalCorrect: { $gt: 0 },
+  })
+    .select("questionId")
+    .lean();
+  return stats.map(
+    (s) => s.questionId as mongoose.Types.ObjectId
+  );
 }
