@@ -21,8 +21,9 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     /** לצפייה מנהל בלבד - נשמר בהרשמה */
     passwordPlain: { type: String },
+    lastLoginAt: { type: Date },
   },
-  { collection: "users" }
+  { collection: "users", timestamps: true }
 );
 
 UserSchema.index({ username: 1 });

@@ -10,25 +10,36 @@ type Props = {
   children: ReactNode;
   /** רוחב מורחב (למשל אזור אישי עם גרפים) */
   wide?: boolean;
+  /** רוחב מקסימלי למסך מנהל — טבלאות רחבות */
+  admin?: boolean;
   /** הצגת אייקון התחברות בכותרת (לאורחים) */
   showLogin?: boolean;
   /** כשמועבר — המשתמש מחובר וה־header מציג התנתקות */
   onLogout?: () => void;
+  /** תפריט ניווט ראשי — אזור אישי / תרגול / למידה */
+  showAppNav?: boolean;
 };
 
 export function PageContainer({
   children,
   wide = false,
+  admin = false,
   showLogin = false,
   onLogout,
+  showAppNav = false,
 }: Props) {
   return (
     <Fragment>
       <a className="skip-link" href="#main-content">
         דלג לתוכן המרכזי
       </a>
-      <SiteHeader wide={wide} showLogin={showLogin} onLogout={onLogout} />
-      <S.Wrapper $wide={wide}>
+      <SiteHeader
+        wide={wide || admin}
+        showLogin={showLogin}
+        onLogout={onLogout}
+        showAppNav={showAppNav}
+      />
+      <S.Wrapper $wide={wide} $admin={admin}>
         <S.Main id="main-content" as="main" tabIndex={-1}>
           {children}
         </S.Main>

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink as RouterNavLink } from "react-router-dom";
 import styled, { css } from "styled-components";
 
 export const HEADER_HEIGHT = "3.5rem";
@@ -35,6 +35,7 @@ export const Brand = styled(Link)`
   border-radius: ${({ theme }) => theme.radius.pill};
   padding: 0.2rem 0.4rem;
   transition: opacity 0.12s ease;
+  flex-shrink: 0;
 
   &:hover {
     opacity: 0.85;
@@ -58,12 +59,56 @@ export const BrandName = styled.span`
   font-size: 1.05rem;
   letter-spacing: -0.01em;
   color: ${({ theme }) => theme.colors.white};
+
+  @media (max-width: 720px) {
+    display: none;
+  }
+`;
+
+export const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0 0.35rem;
+
+  @media (max-width: 480px) {
+    gap: 0.1rem;
+  }
+`;
+
+export const HeaderNavLink = styled(RouterNavLink)`
+  padding: 0.35rem 0.7rem 0.5rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.12s ease, border-color 0.12s ease;
+
+  &[aria-current="page"] {
+    color: ${({ theme }) => theme.colors.white};
+    border-bottom-color: ${({ theme }) => theme.colors.white};
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.white};
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.35rem 0.45rem 0.5rem;
+    font-size: 0.82rem;
+  }
 `;
 
 export const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 `;
 
 const actionBase = css`
@@ -100,6 +145,19 @@ export const LoginLink = styled(Link)`
 export const AuthButton = styled.button`
   ${actionBase}
   padding: 0.4rem 0.85rem;
+
+  @media (max-width: 500px) {
+    padding: 0.4rem;
+    width: 2.1rem;
+    height: 2.1rem;
+    gap: 0;
+  }
+`;
+
+export const AuthButtonLabel = styled.span`
+  @media (max-width: 500px) {
+    display: none;
+  }
 `;
 
 export const IconLink = styled(Link)`

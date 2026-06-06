@@ -69,23 +69,48 @@ type Props = {
   wide?: boolean;
   /** הצגת אייקון התחברות (לאורחים) */
   showLogin?: boolean;
+  /** תפריט אזור אישי / תרגול / למידה — למשתמש מחובר */
+  showAppNav?: boolean;
   /** קיים רק כשהמשתמש מחובר — מציג התנתקות במקום התחברות */
   onLogout?: () => void;
 };
 
+function AppNav() {
+  return (
+    <S.Nav role="tablist" aria-label="אזור אפליקציה">
+      <S.HeaderNavLink to="/profile" end role="tab">
+        אזור אישי
+      </S.HeaderNavLink>
+      <S.HeaderNavLink to="/learning" end role="tab">
+        אזור למידה
+      </S.HeaderNavLink>
+      <S.HeaderNavLink to="/practice" role="tab">
+        תרגול
+      </S.HeaderNavLink>
+    </S.Nav>
+  );
+}
+
 /** כותרת עליונה קבועה — לוגו לדף הבית, פנייה למערכת, והתחברות/התנתקות */
-export function SiteHeader({ wide = false, showLogin = false, onLogout }: Props) {
+export function SiteHeader({
+  wide = false,
+  showLogin = false,
+  showAppNav = false,
+  onLogout,
+}: Props) {
   const loggedIn = Boolean(onLogout);
 
   return (
     <S.Bar>
       <S.Inner $wide={wide}>
-        <S.Brand to="/" aria-label="תרגול תאוריה — דף הבית">
+        <S.Brand to={loggedIn ? "/profile" : "/"} aria-label="תרגול תאוריה — דף הבית">
           <S.LogoMark>
             <Logo />
           </S.LogoMark>
           <S.BrandName>תרגול תאוריה</S.BrandName>
         </S.Brand>
+
+        {showAppNav && <AppNav />}
 
         <S.Actions>
           <S.IconLink
@@ -97,9 +122,9 @@ export function SiteHeader({ wide = false, showLogin = false, onLogout }: Props)
           </S.IconLink>
 
           {loggedIn ? (
-            <S.AuthButton type="button" onClick={onLogout}>
+            <S.AuthButton type="button" onClick={onLogout} aria-label="התנתקות">
               <LogoutIcon />
-              התנתקות
+              <S.AuthButtonLabel>התנתקות</S.AuthButtonLabel>
             </S.AuthButton>
           ) : showLogin ? (
             <S.LoginLink to="/login">

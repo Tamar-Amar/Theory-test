@@ -6,6 +6,7 @@ import { UserModel } from "../models/User.js";
 import { CounterModel, DEMO_FINISH_COUNTER } from "../models/Counter.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import { deleteUserAndRelatedData } from "../services/deleteUserCascade.js";
+import { registeredAtFromObjectId } from "../services/userActivity.js";
 
 const router = Router();
 
@@ -47,6 +48,8 @@ router.get("/stats", async (_req, res) => {
         email: 1,
         passwordPlain: 1,
         attemptCount: { $size: "$atts" },
+        createdAt: 1,
+        lastLoginAt: 1,
       },
     },
     { $sort: { username: 1 } },
@@ -58,6 +61,12 @@ router.get("/stats", async (_req, res) => {
     email: (row.email as string) ?? "",
     password: (row.passwordPlain as string) ?? "",
     attemptCount: row.attemptCount as number,
+    registeredAt: row.createdAt
+      ? new Date(row.createdAt as Date).toISOString()
+      : registeredAtFromObjectId(row.userId as string),
+    lastLoginAt: row.lastLoginAt
+      ? new Date(row.lastLoginAt as Date).toISOString()
+      : null,
   }));
 
   const ticketsRaw = await SupportTicketModel.find()

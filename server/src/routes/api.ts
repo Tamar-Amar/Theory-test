@@ -11,6 +11,7 @@ import { shuffleOptions } from "../services/shuffle.js";
 import { requireAuth, requireRegularUser, optionalAuth } from "../middleware/auth.js";
 import { pickQuestionsForQuiz } from "../services/quizPick.js";
 import { recordQuestionOutcome } from "../services/userStats.js";
+import { formatQuestionText } from "../services/formatQuestionText.js";
 
 const router = Router();
 
@@ -210,7 +211,7 @@ router.get("/attempts/:id", requireAuth, requireRegularUser, async (req, res) =>
           ? it.imageUrl.trim()
           : "";
       return {
-        text: it.text,
+        text: formatQuestionText(it.text),
         options: it.options,
         selectedIndex: it.selectedIndex,
         correctIndex: it.correctIndex,
@@ -330,7 +331,7 @@ router.post("/sessions", requireAuth, requireRegularUser, async (req, res) => {
     const img = picked[index].imageUrl?.trim();
     return {
       index,
-      text: picked[index].text,
+      text: formatQuestionText(picked[index].text),
       options: it.shuffledOptions,
       ...(img ? { imageUrl: img } : {}),
     };
@@ -400,7 +401,7 @@ router.post(
       const img = q.imageUrl?.trim();
       return {
         index,
-        text: q.text,
+        text: formatQuestionText(q.text),
         options: shuffledOptions,
         correctIndex: correctShuffledIndex,
         ...(img ? { imageUrl: img } : {}),
@@ -490,7 +491,7 @@ router.post("/sessions/:id/submit", requireAuth, requireRegularUser, async (req,
       const img = doc?.imageUrl?.trim();
       return {
         questionId: it.questionId,
-        text: doc?.text ?? "(שאלה לא נמצאה במאגר)",
+        text: formatQuestionText(doc?.text ?? "(שאלה לא נמצאה במאגר)"),
         options: it.shuffledOptions,
         selectedIndex: selected,
         correctIndex: it.correctShuffledIndex,

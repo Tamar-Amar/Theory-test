@@ -197,6 +197,8 @@ export type AdminUserRow = {
   email: string;
   password: string;
   attemptCount: number;
+  registeredAt: string | null;
+  lastLoginAt: string | null;
 };
 
 export type AdminStats = {

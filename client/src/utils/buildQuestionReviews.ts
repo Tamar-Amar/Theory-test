@@ -3,6 +3,7 @@ import type {
   QuizQuestion,
   SubmitResponse,
 } from "../api";
+import { formatQuestionText } from "./formatQuestionText";
 
 export function buildQuestionReviews(
   questions: QuizQuestion[],
@@ -11,7 +12,7 @@ export function buildQuestionReviews(
   return breakdown.map((b, i) => {
     const q = questions[i];
     return {
-      text: q?.text ?? "",
+      text: q?.text ? formatQuestionText(q.text) : "",
       options: q?.options ?? [],
       selectedIndex: b.selectedIndex,
       correctIndex: b.correctIndex,

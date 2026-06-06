@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { recordDemoFinish } from "../../api";
+import { formatQuestionText } from "../../utils/formatQuestionText";
 import { QuestionImage } from "../QuestionImage/QuestionImage";
 import { DEMO_QUESTIONS } from "./demoQuestions";
 import * as S from "./LandingPage.styles";
@@ -134,7 +135,7 @@ export function DemoQuiz({ onClose }: Props) {
             <S.QuestionCount>
               שאלה {index + 1} מתוך {total}
             </S.QuestionCount>
-            <S.DemoQuestionText>{q.text}</S.DemoQuestionText>
+            <S.DemoQuestionText>{formatQuestionText(q.text)}</S.DemoQuestionText>
             {q.imageUrl ? <QuestionImage src={q.imageUrl} /> : null}
 
             <S.DemoOptions>

@@ -1,4 +1,5 @@
 import type { AttemptQuestionReview } from "../../api";
+import { formatQuestionText } from "../../utils/formatQuestionText";
 import { QuestionImage } from "../QuestionImage/QuestionImage";
 import * as S from "./QuestionReviewList.styles";
 
@@ -25,7 +26,7 @@ export function QuestionReviewList({ items }: Props) {
             </span>
           </S.Summary>
           <S.Panel>
-            <S.QuestionText>{item.text}</S.QuestionText>
+            <S.QuestionText>{formatQuestionText(item.text)}</S.QuestionText>
             {item.imageUrl ? <QuestionImage src={item.imageUrl} /> : null}
             <S.AnswerBlock $variant={item.isCorrect ? "ok" : "wrong"}>
               <S.AnswerLabel>בחירתך</S.AnswerLabel>

@@ -4,12 +4,13 @@ import { Card } from "../Card/Card";
 import { QuizProgress } from "../QuizProgress/QuizProgress";
 import { QuizQuestionTitle } from "../QuizQuestionTitle/QuizQuestionTitle";
 import { QuestionImage } from "../QuestionImage/QuestionImage";
-import { AnswerOption, AnswerList } from "../AnswerOption/AnswerOption";
+import { AnswerOption } from "../AnswerOption/AnswerOption";
 import { QuizNavRow } from "../QuizNav/QuizNav";
 import {
   SecondaryButton,
   PrimaryInlineButton,
 } from "../Button/Button";
+import * as S from "./QuizView.styles";
 
 type Props = {
   question: QuizQuestion;
@@ -48,21 +49,30 @@ export function QuizView({
         progressPercent={progressPercent}
         elapsedLabel={formatElapsed(elapsedMs)}
       />
-      <QuizQuestionTitle text={question.text} />
-      {question.imageUrl ? (
-        <QuestionImage src={question.imageUrl} />
-      ) : null}
-      <AnswerList role="radiogroup" aria-label="בחירת תשובה">
-        {question.options.map((opt, i) => (
-          <AnswerOption
-            key={i}
-            name={`q-${questionIndex}`}
-            label={opt}
-            selected={selectedIndex === i}
-            onSelect={() => onSelectOption(i)}
-          />
-        ))}
-      </AnswerList>
+
+      <S.QuizBody>
+        <S.QuestionColumn $hasImage={Boolean(question.imageUrl)}>
+          <QuizQuestionTitle text={question.text} />
+          {question.imageUrl ? (
+            <QuestionImage src={question.imageUrl} />
+          ) : null}
+        </S.QuestionColumn>
+
+        <S.AnswersColumn>
+          <S.AnswersList role="radiogroup" aria-label="בחירת תשובה">
+            {question.options.map((opt, i) => (
+              <AnswerOption
+                key={i}
+                name={`q-${questionIndex}`}
+                label={opt}
+                selected={selectedIndex === i}
+                onSelect={() => onSelectOption(i)}
+              />
+            ))}
+          </S.AnswersList>
+        </S.AnswersColumn>
+      </S.QuizBody>
+
       <QuizNavRow>
         <SecondaryButton
           type="button"

@@ -4,7 +4,9 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 import {
   createSession,
@@ -28,15 +30,17 @@ import { LEGAL_DOCS } from "./components/Legal/legalContent";
 import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
-import { PracticeSectionTabs } from "./components/PracticeSectionTabs/PracticeSectionTabs";
 import { LearningArea } from "./components/LearningArea/LearningArea";
+import { MatchingGame } from "./components/LearningArea/MatchingGame";
+import * as LearningStyles from "./components/LearningArea/LearningArea.styles";
+import { PracticeSubNav } from "./components/PracticeArea/PracticeSubNav";
 import { QuizSetup } from "./components/QuizSetup/QuizSetup";
 import { QuizView } from "./components/QuizView/QuizView";
 import { ResultsView } from "./components/ResultsView/ResultsView";
 import { SupportTicketForm } from "./components/SupportTicketForm/SupportTicketForm";
 import { UserBar } from "./components/UserBar/UserBar";
 import { NARROW_SCREEN_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
-import { NarrowColumn } from "./styles/layout";
+import { NarrowColumn, QuizColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
 
 type Phase = "setup" | "quiz" | "results";
@@ -75,6 +79,8 @@ function innerLegalRoutes() {
 
 function AppShell() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const isNarrowScreen = useMediaQuery(NARROW_SCREEN_QUERY);
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -137,6 +143,13 @@ function AppShell() {
     if (!user || user.admin) return;
     loadMeta();
   }, [user, loadMeta]);
+
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat && meta?.categories.includes(cat)) {
+      setCategory(cat);
+    }
+  }, [location.pathname, location.search, meta, searchParams]);
 
   useEffect(() => {
     if (phase !== "quiz" || !startedAt) return;
@@ -311,7 +324,7 @@ function AppShell() {
 
   if (user.admin) {
     return (
-      <PageContainer wide={false} onLogout={logout}>
+      <PageContainer admin onLogout={logout}>
         <AppHeader
           title="תרגול תאוריה"
           subtitle="לוח בקרה - מנהל"
@@ -336,7 +349,7 @@ function AppShell() {
   }
 
   return (
-    <PageContainer wide onLogout={logout}>
+    <PageContainer wide onLogout={logout} showAppNav>
       <AppHeader
         title="תרגול תאוריה"
         subtitle="תרגול עם מיקוד על פי תוצאות בחינות קודמות"
@@ -350,10 +363,25 @@ function AppShell() {
         <Route path="/login" element={<Navigate to="/profile" replace />} />
         <Route path="/" element={<Navigate to="/profile" replace />} />
         <Route
+          path="/practice/game"
+          element={
+            isNarrowScreen || phase !== "setup" ? (
+              <Navigate to="/practice" replace />
+            ) : (
+              <>
+                <PracticeSubNav />
+                <LearningStyles.Wrap>
+                  <MatchingGame meta={meta} loadingMeta={loadingMeta} />
+                </LearningStyles.Wrap>
+              </>
+            )
+          }
+        />
+        <Route
           path="/practice"
           element={
             <>
-              {phase === "setup" && <PracticeSectionTabs />}
+              {phase === "setup" && <PracticeSubNav />}
               <NarrowColumn>
                 {phase === "setup" && (
                   <QuizSetup
@@ -367,7 +395,18 @@ function AppShell() {
                     onStart={handleStart}
                   />
                 )}
-                {phase === "quiz" && q && (
+                {phase === "results" && result && (
+                  <ResultsView
+                    result={result}
+                    questions={questions}
+                    elapsedMs={elapsed}
+                    onAgain={() => resetToPath("/practice")}
+                    onGoHome={() => resetToPath("/profile")}
+                  />
+                )}
+              </NarrowColumn>
+              {phase === "quiz" && q && (
+                <QuizColumn>
                   <QuizView
                     question={q}
                     questionIndex={current}
@@ -381,17 +420,8 @@ function AppShell() {
                     onNext={goNext}
                     onFinish={handleFinish}
                   />
-                )}
-                {phase === "results" && result && (
-                  <ResultsView
-                    result={result}
-                    questions={questions}
-                    elapsedMs={elapsed}
-                    onAgain={() => resetToPath("/practice")}
-                    onGoHome={() => resetToPath("/profile")}
-                  />
-                )}
-              </NarrowColumn>
+                </QuizColumn>
+              )}
             </>
           }
         />
@@ -401,26 +431,17 @@ function AppShell() {
             phase !== "setup" ? (
               <Navigate to="/practice" replace />
             ) : (
-              <>
-                <PracticeSectionTabs />
-                <PersonalStats />
-                <div style={{ marginTop: "2rem" }}>
-                  <SupportTicketForm defaultEmail={user.email} />
-                </div>
-              </>
+              <PersonalStats />
             )
           }
         />
         <Route
           path="/learning"
           element={
-            isNarrowScreen || phase !== "setup" ? (
+            phase !== "setup" ? (
               <Navigate to="/practice" replace />
             ) : (
-              <>
-                <PracticeSectionTabs />
-                <LearningArea meta={meta} loadingMeta={loadingMeta} />
-              </>
+              <LearningArea meta={meta} />
             )
           }
         />

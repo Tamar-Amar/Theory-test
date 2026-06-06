@@ -17,6 +17,6 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-/** מתחת לרוחב הזה אזור הלמידה (משחק הזיכרון) אינו זמין */
+/** מתחת לרוחב הזה משחק ההתאמות בתרגול אינו זמין (מסך קטן מדי) */
 export const LEARNING_MIN_WIDTH = 902;
 export const NARROW_SCREEN_QUERY = `(max-width: ${LEARNING_MIN_WIDTH - 1}px)`;

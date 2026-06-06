@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LearningQuestion } from "../../api";
+import { formatQuestionText } from "../../utils/formatQuestionText";
 import { PrimaryButton, SecondaryButton } from "../Button/Button";
 import { Card } from "../Card/Card";
 import { QuestionImage } from "../QuestionImage/QuestionImage";
@@ -164,7 +165,7 @@ export function LearningMode({ questions, onExit }: Props) {
 
       {!done && question && (
         <Card>
-          <S.QuestionText>{question.text}</S.QuestionText>
+          <S.QuestionText>{formatQuestionText(question.text)}</S.QuestionText>
           {question.imageUrl ? <QuestionImage src={question.imageUrl} /> : null}
 
           {stage === "learn" && (

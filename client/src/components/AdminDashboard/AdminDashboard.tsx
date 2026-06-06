@@ -8,7 +8,8 @@ import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
 import { LoadingState } from "../LoadingState/LoadingState";
 import * as S from "./AdminDashboard.styles";
 
-function formatWhen(iso: string) {
+function formatWhen(iso: string | null | undefined) {
+  if (!iso) return "—";
   try {
     return new Date(iso).toLocaleString("he-IL", {
       dateStyle: "short",
@@ -113,6 +114,8 @@ export function AdminDashboard() {
                 <tr>
                   <S.Th>שם משתמש</S.Th>
                   <S.Th>אימייל</S.Th>
+                  <S.Th>תאריך הרשמה</S.Th>
+                  <S.Th>כניסה אחרונה</S.Th>
                   <S.Th>סיסמה</S.Th>
                   <S.Th>מבחנים שהושלמו</S.Th>
                   <S.Th>פעולות</S.Th>
@@ -123,6 +126,8 @@ export function AdminDashboard() {
                   <S.Tr key={u.userId}>
                     <S.Td>{u.username}</S.Td>
                     <S.Td>{u.email || "-"}</S.Td>
+                    <S.TdDate>{formatWhen(u.registeredAt)}</S.TdDate>
+                    <S.TdDate>{formatWhen(u.lastLoginAt)}</S.TdDate>
                     <S.Td>{u.password || "-"}</S.Td>
                     <S.Td>{u.attemptCount}</S.Td>
                     <S.Td>

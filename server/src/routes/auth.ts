@@ -6,6 +6,7 @@ import { getAdminCredentials } from "../config.js";
 import { UserModel } from "../models/User.js";
 import { signAdminToken, signUserToken } from "../services/jwt.js";
 import { requireAuth } from "../middleware/auth.js";
+import { touchLastLogin } from "../services/userActivity.js";
 
 const router = Router();
 
@@ -51,11 +52,13 @@ router.post("/register", registerLimiter, async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 11);
   try {
+    const now = new Date();
     const user = await UserModel.create({
       username,
       email: email.toLowerCase(),
       passwordHash,
       passwordPlain: password,
+      lastLoginAt: now,
     });
     const token = signUserToken(user._id.toString(), "user");
     return res.status(201).json({
@@ -125,6 +128,8 @@ router.post("/login", loginLimiter, async (req, res) => {
     return res.status(401).json({ error: "שם משתמש או סיסמה שגויים" });
   }
 
+  await touchLastLogin(user._id.toString());
+
   const token = signUserToken(user._id.toString(), "user");
   res.json({
     token,
@@ -147,6 +152,9 @@ router.get("/me", requireAuth, async (req, res) => {
   if (!user) {
     return res.status(401).json({ error: "משתמש לא נמצא" });
   }
+
+  await touchLastLogin(req.authUser!.id);
+
   const u = user as unknown as { username: string; email: string };
   res.json({ username: u.username, email: u.email });
 });

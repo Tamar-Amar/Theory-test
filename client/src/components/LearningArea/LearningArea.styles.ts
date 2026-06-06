@@ -9,6 +9,47 @@ export const Wrap = styled.div`
   margin-inline: auto;
 `;
 
+export const TopicsIntro = styled.p`
+  margin: 0 0 1.1rem;
+  font-size: 0.92rem;
+  color: ${({ theme }) => theme.colors.muted};
+  line-height: 1.6;
+`;
+
+export const TopicList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+`;
+
+export const TopicItem = styled.section`
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+`;
+
+export const TopicTitle = styled.h3`
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+export const TopicText = styled.p`
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: ${({ theme }) => theme.colors.text};
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
 export const Intro = styled.p`
   margin: 0;
   font-size: 0.9rem;

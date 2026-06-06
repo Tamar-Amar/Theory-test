@@ -70,6 +70,11 @@ export const Td = styled.td`
   vertical-align: top;
 `;
 
+export const TdDate = styled(Td)`
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+`;
+
 export const Tr = styled.tr`
   &:last-child ${Td} {
     border-bottom: none;

@@ -5,8 +5,9 @@ import { HEADER_HEIGHT } from "../SiteHeader/SiteHeader.styles";
 /** מקום לפוטר קבוע בתחתית המסך */
 const FOOTER_RESERVE = "5.5rem";
 
-export const Wrapper = styled.div<{ $wide?: boolean }>`
-  max-width: ${({ $wide }) => ($wide ? "min(960px, 100%)" : "640px")};
+export const Wrapper = styled.div<{ $wide?: boolean; $admin?: boolean }>`
+  max-width: ${({ $admin, $wide }) =>
+    $admin ? "min(1200px, 100%)" : $wide ? "min(960px, 100%)" : "640px"};
   margin: 0 auto;
   padding: calc(${HEADER_HEIGHT} + 1.25rem) 1.25rem
     calc(${FOOTER_RESERVE} + env(safe-area-inset-bottom, 0px));
