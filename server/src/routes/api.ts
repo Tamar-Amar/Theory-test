@@ -12,6 +12,12 @@ import { requireAuth, requireRegularUser, optionalAuth } from "../middleware/aut
 import { pickQuestionsForQuiz } from "../services/quizPick.js";
 import { recordQuestionOutcome } from "../services/userStats.js";
 import { formatQuestionText } from "../services/formatQuestionText.js";
+import {
+  LICENSE_TYPE_IDS,
+  LICENSE_TYPE_LABELS,
+} from "../constants/licenseTypes.js";
+import { buildQuestionFilter } from "../services/questionFilter.js";
+import { parseLicenseType } from "../constants/licenseTypes.js";
 
 const router = Router();
 
@@ -48,11 +54,24 @@ type AttemptSummaryLean = {
   score: number;
   total: number;
   category?: string;
+  licenseType?: string;
   durationMs?: number;
   items?: AttemptItemLean[];
 };
 
 const SESSION_TTL_MS = 60 * 60 * 1000;
+
+async function getUserLicenseType(
+  userId: mongoose.Types.ObjectId
+): Promise<string | null> {
+  const user = await UserModel.findById(userId).select("licenseType").lean();
+  const row = user as { licenseType?: string } | null;
+  const licenseType = parseLicenseType(row?.licenseType);
+  return licenseType || null;
+}
+
+const LICENSE_REQUIRED_MSG =
+  "יש לבחור סוג רישיון באזור האישי לפני תחילת תרגול.";
 
 router.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -61,9 +80,17 @@ router.get("/health", (_req, res) => {
 router.get("/meta", async (_req, res) => {
   const count = await QuestionModel.countDocuments();
   const categories = await QuestionModel.distinct("category");
+  const licenseTypeCounts = await Promise.all(
+    LICENSE_TYPE_IDS.map(async (id) => ({
+      id,
+      label: LICENSE_TYPE_LABELS[id],
+      questionCount: await QuestionModel.countDocuments({ licenseTypes: id }),
+    }))
+  );
   res.json({
     questionCount: count,
     categories: categories.filter(Boolean).sort(),
+    licenseTypes: licenseTypeCounts.filter((row) => row.questionCount > 0),
   });
 });
 
@@ -127,6 +154,7 @@ router.get("/stats", requireAuth, requireRegularUser, async (req, res) => {
           score: 1,
           total: 1,
           category: 1,
+          licenseType: 1,
           durationMs: 1,
           createdAt: 1,
           hasDetails: {
@@ -172,6 +200,7 @@ router.get("/stats", requireAuth, requireRegularUser, async (req, res) => {
         total: a.total,
         percent: Math.round((100 * a.score) / a.total),
         category: a.category || "",
+        licenseType: a.licenseType || "",
         avgMsPerQuestion,
         hasDetails: Boolean(a.hasDetails),
       };
@@ -204,6 +233,7 @@ router.get("/attempts/:id", requireAuth, requireRegularUser, async (req, res) =>
     total: att.total,
     percent: Math.round((100 * att.score) / att.total),
     category: att.category || "",
+    licenseType: att.licenseType || "",
     durationMs: att.durationMs ?? null,
     items: rawItems.map((it) => {
       const img =
@@ -283,22 +313,34 @@ router.post("/sessions", requireAuth, requireRegularUser, async (req, res) => {
   );
   const category =
     typeof req.body?.category === "string" ? req.body.category.trim() : "";
+  const licenseType = await getUserLicenseType(userId);
+  if (!licenseType) {
+    return res.status(400).json({ error: LICENSE_REQUIRED_MSG });
+  }
   const focusWeak = true;
 
-  const filter = category ? { category } : {};
+  const filter = buildQuestionFilter({ category, licenseType });
   const total = await QuestionModel.countDocuments(filter);
   if (total < count) {
     return res.status(400).json({
       error:
         total === 0
-          ? "אין שאלות במסד. יש לטעון שאלות ל־MongoDB (למשל ייבוא למאגר questions)."
-          : `לא מספיק שאלות בקטגוריה: במסד ${total}, נבחרו ${count} למבחן.`,
+          ? licenseType
+            ? `אין שאלות במסד לרישיון ${licenseType}. הריצו tag-licenses לעדכון המאגר.`
+            : "אין שאלות במסד. יש לטעון שאלות ל־MongoDB (למשל ייבוא למאגר questions)."
+          : `לא מספיק שאלות: במסד ${total}, נבחרו ${count} למבחן.`,
     });
   }
 
   let picked: Awaited<ReturnType<typeof pickQuestionsForQuiz>>;
   try {
-    picked = await pickQuestionsForQuiz(userId, count, category, focusWeak);
+    picked = await pickQuestionsForQuiz(
+      userId,
+      count,
+      category,
+      licenseType,
+      focusWeak
+    );
   } catch (e) {
     if (e instanceof Error && e.message === "INSUFFICIENT_QUESTIONS") {
       return res.status(400).json({
@@ -354,6 +396,10 @@ router.post(
     const count = Math.min(24, Math.max(3, Number(req.body?.count) || 8));
     const category =
       typeof req.body?.category === "string" ? req.body.category.trim() : "";
+    const licenseType = await getUserLicenseType(userId);
+    if (!licenseType) {
+      return res.status(400).json({ error: LICENSE_REQUIRED_MSG });
+    }
     const focusWeak = true;
 
     // משחק ההתאמות אינו תומך בשאלות עם תמונה — סופרים ובוחרים רק שאלות ללא תמונה
@@ -364,14 +410,17 @@ router.post(
         { imageUrl: "" },
       ],
     };
-    const filter = { ...(category ? { category } : {}), ...noImage };
+    const filter = {
+      ...buildQuestionFilter({ category, licenseType }),
+      ...noImage,
+    };
     const total = await QuestionModel.countDocuments(filter);
     if (total < count) {
       return res.status(400).json({
         error:
           total === 0
-            ? "אין מספיק שאלות ללא תמונה בקטגוריה זו למשחק ההתאמות."
-            : `לא מספיק שאלות ללא תמונה בקטגוריה: במסד ${total}, נדרשות ${count} ללמידה.`,
+            ? "אין מספיק שאלות ללא תמונה בקטגוריה/רישיון זה למשחק ההתאמות."
+            : `לא מספיק שאלות ללא תמונה: במסד ${total}, נדרשות ${count} ללמידה.`,
       });
     }
 
@@ -381,6 +430,7 @@ router.post(
         userId,
         count,
         category,
+        licenseType,
         focusWeak,
         true
       );
@@ -424,6 +474,10 @@ router.post("/sessions/:id/submit", requireAuth, requireRegularUser, async (req,
       typeof req.body?.durationMs === "number" ? req.body.durationMs : undefined;
     const category =
       typeof req.body?.category === "string" ? req.body.category : "";
+    const licenseType = await getUserLicenseType(userId);
+    if (!licenseType) {
+      return res.status(400).json({ error: LICENSE_REQUIRED_MSG });
+    }
 
     if (!Array.isArray(answers)) {
       return res.status(400).json({ error: "חסר מערך answers" });
@@ -513,6 +567,7 @@ router.post("/sessions/:id/submit", requireAuth, requireRegularUser, async (req,
       score: correct,
       total: sessionItems.length,
       category,
+      licenseType,
       durationMs,
       items: attemptItems,
     });

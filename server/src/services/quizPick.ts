@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { QuestionModel } from "../models/Question.js";
 import { getMasteredQuestionIds, pickWeakQuestionIds } from "./userStats.js";
 import { shuffleArray } from "./shuffle.js";
+import { buildQuestionFilter } from "./questionFilter.js";
 
 export type QuestionForQuiz = {
   _id: mongoose.Types.ObjectId;
@@ -15,6 +16,7 @@ export async function pickQuestionsForQuiz(
   userId: mongoose.Types.ObjectId,
   count: number,
   category: string,
+  licenseType: string,
   focusWeak: boolean,
   excludeImages = false
 ): Promise<QuestionForQuiz[]> {
@@ -27,7 +29,7 @@ export async function pickQuestionsForQuiz(
         ],
       }
     : {};
-  const filter = { ...(category ? { category } : {}), ...noImage };
+  const filter = { ...buildQuestionFilter({ category, licenseType }), ...noImage };
   const masteredIds = await getMasteredQuestionIds(userId);
   const availableFilter =
     masteredIds.length > 0
@@ -42,7 +44,7 @@ export async function pickQuestionsForQuiz(
   let weakIds: mongoose.Types.ObjectId[] = [];
   if (focusWeak) {
     const weakTarget = Math.min(Math.ceil(count * 0.5), count);
-    weakIds = await pickWeakQuestionIds(userId, category, weakTarget);
+    weakIds = await pickWeakQuestionIds(userId, category, licenseType, weakTarget);
   }
 
   const withExcluded = (extra: mongoose.Types.ObjectId[]) => {

@@ -5,6 +5,8 @@ const QuestionSchema = new mongoose.Schema(
     sourceId: { type: Number, required: true, unique: true, index: true },
     text: { type: String, required: true },
     category: { type: String, default: "" },
+    /** סוגי רישיון שבהם השאלה מופיעה במאגר הרשמי (B, A, C, …) */
+    licenseTypes: { type: [String], default: [], index: true },
     options: { type: [String], required: true },
     correctOptionIndex: { type: Number, required: true },
     imageUrl: { type: String, default: "" },

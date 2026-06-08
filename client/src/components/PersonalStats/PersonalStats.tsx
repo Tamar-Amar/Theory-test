@@ -2,12 +2,17 @@ import { Fragment, useEffect, useState } from "react";
 import {
   fetchAttemptDetail,
   fetchUserStats,
+  updateUserLicenseType,
   type AttemptDetail,
+  type Meta,
   type UserStats,
 } from "../../api";
 import { ProgressChart } from "./ProgressChart";
 import { QuestionReviewList } from "../QuestionReviewList/QuestionReviewList";
 import { formatAvgMsPerQuestion } from "../../utils/formatAvgPerQuestion";
+import { FormField } from "../FormField/FormField";
+import { SelectField } from "../SelectField/SelectField";
+import { PrimaryButton, SecondaryButton } from "../Button/Button";
 import * as S from "./PersonalStats.styles";
 
 function formatWhen(iso: string) {
@@ -21,10 +26,27 @@ function formatWhen(iso: string) {
   }
 }
 
-export function PersonalStats() {
+type Props = {
+  meta: Meta | null;
+  loadingMeta: boolean;
+  licenseType: string;
+  onLicenseTypeSaved: (licenseType: string) => void;
+};
+
+export function PersonalStats({
+  meta,
+  loadingMeta,
+  licenseType,
+  onLicenseTypeSaved,
+}: Props) {
   const [data, setData] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [selectedLicense, setSelectedLicense] = useState(licenseType);
+  const [savingLicense, setSavingLicense] = useState(false);
+  const [licenseErr, setLicenseErr] = useState<string | null>(null);
+  const [saveOk, setSaveOk] = useState(false);
+  const [editingLicense, setEditingLicense] = useState(!licenseType);
   const [expandedAttemptId, setExpandedAttemptId] = useState<string | null>(
     null
   );
@@ -35,6 +57,11 @@ export function PersonalStats() {
   const [detailErrById, setDetailErrById] = useState<Record<string, string>>(
     {}
   );
+
+  useEffect(() => {
+    setSelectedLicense(licenseType);
+    if (licenseType) setEditingLicense(false);
+  }, [licenseType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,10 +86,116 @@ export function PersonalStats() {
   const pct = (n: number | null) =>
     n == null ? "-" : `${n}%`;
 
+  const licenseOptions = (meta?.licenseTypes || []).map((row) => ({
+    value: row.id,
+    label: row.label,
+  }));
+
+  const selectedLicenseLabel =
+    meta?.licenseTypes.find((row) => row.id === licenseType)?.label ||
+    licenseOptions.find((row) => row.value === licenseType)?.label ||
+    licenseType;
+
+  const showLicenseEditor = editingLicense || !licenseType;
+
+  const handleSaveLicense = async () => {
+    if (!selectedLicense) {
+      setLicenseErr("יש לבחור סוג רישיון");
+      return;
+    }
+    setSavingLicense(true);
+    setLicenseErr(null);
+    setSaveOk(false);
+    try {
+      const user = await updateUserLicenseType(selectedLicense);
+      onLicenseTypeSaved(user.licenseType || selectedLicense);
+      setEditingLicense(false);
+      setSaveOk(true);
+      window.setTimeout(() => setSaveOk(false), 2500);
+    } catch (e) {
+      setLicenseErr(e instanceof Error ? e.message : "שמירה נכשלה");
+    } finally {
+      setSavingLicense(false);
+    }
+  };
+
   const ready = Boolean(!loading && !err && data);
 
   return (
     <S.Root>
+      <S.LicenseCard>
+        <S.SectionTitle>סוג הרישיון שלך</S.SectionTitle>
+        {!licenseType ? (
+          <S.LicenseWarning>
+            לפני תחילת מבחן או תרגול, בחרו כאן את סוג הרישיון שעליו אתם נבחנים.
+          </S.LicenseWarning>
+        ) : (
+          <S.LicenseIntro>
+            התרגול והמבחנים מותאמים לרישיון שבחרתם. ניתן לעדכן בכל עת.
+          </S.LicenseIntro>
+        )}
+        {loadingMeta ? (
+          <S.Muted>טוען סוגי רישיון…</S.Muted>
+        ) : licenseOptions.length ? (
+          showLicenseEditor ? (
+            <>
+              <FormField id="profile-license" label="בחרו סוג רישיון">
+                <SelectField
+                  id="profile-license"
+                  value={selectedLicense}
+                  options={licenseOptions}
+                  onChange={setSelectedLicense}
+                  ariaLabel="סוג רישיון לתרגול"
+                />
+              </FormField>
+              <S.LicenseActions>
+                <PrimaryButton
+                  type="button"
+                  disabled={savingLicense || !selectedLicense}
+                  onClick={handleSaveLicense}
+                >
+                  {savingLicense ? "שומר…" : "שמירת בחירה"}
+                </PrimaryButton>
+                {licenseType ? (
+                  <SecondaryButton
+                    type="button"
+                    disabled={savingLicense}
+                    onClick={() => {
+                      setSelectedLicense(licenseType);
+                      setEditingLicense(false);
+                      setLicenseErr(null);
+                    }}
+                  >
+                    ביטול
+                  </SecondaryButton>
+                ) : null}
+                {saveOk ? <S.SaveOk>נשמר בהצלחה</S.SaveOk> : null}
+              </S.LicenseActions>
+              {licenseErr ? <S.LicenseHint>{licenseErr}</S.LicenseHint> : null}
+            </>
+          ) : (
+            <>
+              <S.LicenseCurrent>{selectedLicenseLabel}</S.LicenseCurrent>
+              <S.LicenseActions>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => {
+                    setSelectedLicense(licenseType);
+                    setEditingLicense(true);
+                    setLicenseErr(null);
+                    setSaveOk(false);
+                  }}
+                >
+                  שינוי סוג הרישיון שנבחר
+                </SecondaryButton>
+              </S.LicenseActions>
+            </>
+          )
+        ) : (
+          <S.Muted>לא נטענו סוגי רישיון מהמאגר.</S.Muted>
+        )}
+      </S.LicenseCard>
+
       {err ? <S.Empty>{err}</S.Empty> : null}
 
       {!err && (loading || data) ? (

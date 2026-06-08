@@ -28,6 +28,11 @@ function authHeaders(): HeadersInit {
 export type Meta = {
   questionCount: number;
   categories: string[];
+  licenseTypes: {
+    id: string;
+    label: string;
+    questionCount: number;
+  }[];
 };
 
 export type QuizQuestion = {
@@ -73,6 +78,7 @@ export type SubmitResponse = {
 export type AuthUser = {
   username: string;
   email: string;
+  licenseType?: string;
   admin?: boolean;
 };
 
@@ -93,6 +99,7 @@ export type AttemptDetail = {
   total: number;
   percent: number;
   category: string;
+  licenseType: string;
   durationMs: number | null;
   items: AttemptQuestionReview[];
 };
@@ -113,6 +120,7 @@ export type UserStats = {
     total: number;
     percent: number;
     category: string;
+    licenseType: string;
     /** זמן כולל חלקי מספר שאלות - להשוואה בין מבחנים באורכים שונים */
     avgMsPerQuestion: number | null;
     /** מבחנים לפני שמירת פירוט במסד - ללא כפתור פירוט */
@@ -158,6 +166,21 @@ export async function login(
 
 export async function fetchMe(): Promise<AuthUser> {
   const res = await fetch(apiUrl("/api/auth/me"), { headers: authHeaders() });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export async function updateUserLicenseType(
+  licenseType: string
+): Promise<AuthUser> {
+  const res = await fetch(apiUrl("/api/auth/me/license-type"), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ licenseType }),
+  });
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();
 }

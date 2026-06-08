@@ -165,3 +165,60 @@ export const ExpandedInner = styled.div`
   padding: 0.85rem 0.75rem 1rem;
   border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
 `;
+
+export const LicenseCard = styled.section`
+  background: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.radius.card};
+  padding: 1.25rem 1.35rem;
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  box-shadow: ${({ theme }) => theme.shadow.card},
+    0 0 0 1px ${({ theme }) => theme.colors.accentGlow};
+`;
+
+export const LicenseIntro = styled.p`
+  margin: 0 0 1rem;
+  color: ${({ theme }) => theme.colors.muted};
+  line-height: 1.55;
+  font-size: 0.95rem;
+`;
+
+export const LicenseCurrent = styled.div`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  padding: 0.75rem 0.9rem;
+  border-radius: ${({ theme }) => theme.radius.control};
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+`;
+
+export const LicenseHint = styled.p`
+  margin: 0.75rem 0 0;
+  font-size: 0.88rem;
+  color: ${({ theme }) => theme.colors.accentDim};
+  font-weight: 600;
+`;
+
+export const LicenseWarning = styled.p`
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: ${({ theme }) => theme.radius.control};
+  background: ${({ theme }) => theme.colors.dangerBg};
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 0.9rem;
+  line-height: 1.45;
+`;
+
+export const LicenseActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+`;
+
+export const SaveOk = styled.span`
+  font-size: 0.88rem;
+  color: ${({ theme }) => theme.colors.accentDim};
+  font-weight: 600;
+`;

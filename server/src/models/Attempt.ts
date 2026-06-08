@@ -29,6 +29,7 @@ const AttemptSchema = new mongoose.Schema(
     score: { type: Number, required: true },
     total: { type: Number, required: true },
     category: { type: String, default: "" },
+    licenseType: { type: String, default: "" },
     durationMs: { type: Number },
     /** צילום מצב השאלות כפי שהוצגו במבחן (אפשרות מעורבבות) */
     items: { type: [AttemptItemSchema] },

@@ -4,6 +4,7 @@ import {
   type LearningQuestion,
   type Meta,
 } from "../../api";
+import { LicenseRequiredNotice } from "../LicenseRequiredNotice/LicenseRequiredNotice";
 import { formatQuestionText } from "../../utils/formatQuestionText";
 import { PrimaryButton, SecondaryButton } from "../Button/Button";
 import { Card } from "../Card/Card";
@@ -15,6 +16,7 @@ import * as S from "./LearningArea.styles";
 type Props = {
   meta: Meta | null;
   loadingMeta: boolean;
+  hasLicenseType: boolean;
 };
 
 type Mode = "setup" | "game" | "done";
@@ -82,7 +84,7 @@ function toPairs(questions: LearningQuestion[]): {
   return { questions: qs, answers: shuffle(as) };
 }
 
-export function MatchingGame({ meta, loadingMeta }: Props) {
+export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
   const [mode, setMode] = useState<Mode>("setup");
   const [category, setCategory] = useState("");
   const [loadingGame, setLoadingGame] = useState(false);
@@ -116,6 +118,10 @@ export function MatchingGame({ meta, loadingMeta }: Props) {
   }, [allDone]);
 
   const startGame = async () => {
+    if (!hasLicenseType) {
+      setErr("יש לבחור סוג רישיון באזור האישי לפני תחילת תרגול.");
+      return;
+    }
     if (!category) {
       setErr("בחרו קטגוריה לפני התחלת המשחק");
       return;
@@ -203,7 +209,11 @@ export function MatchingGame({ meta, loadingMeta }: Props) {
 
   return (
     <>
-      {mode === "setup" && (
+      {mode === "setup" && !hasLicenseType && (
+        <LicenseRequiredNotice context="משחק התאמות" />
+      )}
+
+      {mode === "setup" && hasLicenseType && (
         <Card>
           {loadingMeta ? (
             <LoadingState label="טוען קטגוריות…" />

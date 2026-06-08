@@ -21,6 +21,8 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     /** לצפייה מנהל בלבד - נשמר בהרשמה */
     passwordPlain: { type: String },
+    /** סוג הרישיון לתרגול — B, A, C, C1, D, 1 */
+    licenseType: { type: String, default: "" },
     lastLoginAt: { type: Date },
   },
   { collection: "users", timestamps: true }

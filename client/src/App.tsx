@@ -27,7 +27,7 @@ import { ErrorAlert } from "./components/ErrorAlert/ErrorAlert";
 import { LandingPage } from "./components/LandingPage/LandingPage";
 import { LegalPage } from "./components/Legal/LegalPage";
 import { LEGAL_DOCS } from "./components/Legal/legalContent";
-import { LoadingState } from "./components/LoadingState/LoadingState";
+import { LicenseRequiredNotice } from "./components/LicenseRequiredNotice/LicenseRequiredNotice";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
 import { LearningArea } from "./components/LearningArea/LearningArea";
@@ -42,6 +42,7 @@ import { UserBar } from "./components/UserBar/UserBar";
 import { NARROW_SCREEN_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
 import { NarrowColumn, QuizColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
+import { LoadingState } from "./components/LoadingState/LoadingState";
 
 type Phase = "setup" | "quiz" | "results";
 
@@ -178,6 +179,10 @@ function AppShell() {
   );
 
   const handleStart = async () => {
+    if (!user?.licenseType) {
+      setError("יש לבחור סוג רישיון באזור האישי לפני תחילת תרגול.");
+      return;
+    }
     setStarting(true);
     setError(null);
     try {
@@ -266,6 +271,7 @@ function AppShell() {
   };
 
   const q = questions[current];
+  const hasLicenseType = Boolean(user?.licenseType);
 
   if (!authChecked) {
     return (
@@ -371,7 +377,11 @@ function AppShell() {
               <>
                 <PracticeSubNav />
                 <LearningStyles.Wrap>
-                  <MatchingGame meta={meta} loadingMeta={loadingMeta} />
+                  <MatchingGame
+                    meta={meta}
+                    loadingMeta={loadingMeta}
+                    hasLicenseType={hasLicenseType}
+                  />
                 </LearningStyles.Wrap>
               </>
             )
@@ -383,18 +393,21 @@ function AppShell() {
             <>
               {phase === "setup" && <PracticeSubNav />}
               <NarrowColumn>
-                {phase === "setup" && (
-                  <QuizSetup
-                    meta={meta}
-                    loadingMeta={loadingMeta}
-                    count={count}
-                    category={category}
-                    starting={starting}
-                    onCount={setCount}
-                    onCategory={setCategory}
-                    onStart={handleStart}
-                  />
-                )}
+                {phase === "setup" &&
+                  (hasLicenseType ? (
+                    <QuizSetup
+                      meta={meta}
+                      loadingMeta={loadingMeta}
+                      count={count}
+                      category={category}
+                      starting={starting}
+                      onCount={setCount}
+                      onCategory={setCategory}
+                      onStart={handleStart}
+                    />
+                  ) : (
+                    <LicenseRequiredNotice context="מבחן" />
+                  ))}
                 {phase === "results" && result && (
                   <ResultsView
                     result={result}
@@ -431,7 +444,16 @@ function AppShell() {
             phase !== "setup" ? (
               <Navigate to="/practice" replace />
             ) : (
-              <PersonalStats />
+              <PersonalStats
+                meta={meta}
+                loadingMeta={loadingMeta}
+                licenseType={user.licenseType || ""}
+                onLicenseTypeSaved={(licenseType) =>
+                  setUser((prev) =>
+                    prev ? { ...prev, licenseType } : prev
+                  )
+                }
+              />
             )
           }
         />

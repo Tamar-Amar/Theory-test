@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { UserQuestionStatModel } from "../models/UserQuestionStat.js";
 import { QuestionModel } from "../models/Question.js";
+import { buildQuestionFilter } from "./questionFilter.js";
 
 function priorityScore(s: {
   totalWrong: number;
@@ -75,6 +76,7 @@ export async function recordQuestionOutcome(
 export async function pickWeakQuestionIds(
   userId: mongoose.Types.ObjectId,
   category: string,
+  licenseType: string,
   maxPick: number
 ): Promise<mongoose.Types.ObjectId[]> {
   if (maxPick <= 0) return [];
@@ -88,8 +90,10 @@ export async function pickWeakQuestionIds(
   if (!stats.length) return [];
 
   const qids = stats.map((s) => s.questionId);
-  const qFilter: Record<string, unknown> = { _id: { $in: qids } };
-  if (category) qFilter.category = category;
+  const qFilter: Record<string, unknown> = {
+    _id: { $in: qids },
+    ...buildQuestionFilter({ category, licenseType }),
+  };
 
   const existing = await QuestionModel.find(qFilter).select("_id").lean();
   const allowed = new Set(existing.map((d) => String(d._id)));

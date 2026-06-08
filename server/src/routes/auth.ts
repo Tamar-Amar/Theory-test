@@ -5,8 +5,9 @@ import rateLimit from "express-rate-limit";
 import { getAdminCredentials } from "../config.js";
 import { UserModel } from "../models/User.js";
 import { signAdminToken, signUserToken } from "../services/jwt.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRegularUser } from "../middleware/auth.js";
 import { touchLastLogin } from "../services/userActivity.js";
+import { parseLicenseType } from "../constants/licenseTypes.js";
 
 const router = Router();
 
@@ -63,7 +64,7 @@ router.post("/register", registerLimiter, async (req, res) => {
     const token = signUserToken(user._id.toString(), "user");
     return res.status(201).json({
       token,
-      user: { username: user.username, email: user.email },
+      user: { username: user.username, email: user.email, licenseType: "" },
     });
   } catch (e: unknown) {
     if (e instanceof mongoose.Error.ValidationError) {
@@ -133,7 +134,41 @@ router.post("/login", loginLimiter, async (req, res) => {
   const token = signUserToken(user._id.toString(), "user");
   res.json({
     token,
-    user: { username: user.username, email: user.email },
+    user: {
+      username: user.username,
+      email: user.email,
+      licenseType: parseLicenseType(user.licenseType) || "",
+    },
+  });
+});
+
+router.patch("/me/license-type", requireAuth, requireRegularUser, async (req, res) => {
+  const licenseType = parseLicenseType(req.body?.licenseType);
+  if (!licenseType) {
+    return res.status(400).json({ error: "יש לבחור סוג רישיון תקין" });
+  }
+
+  const user = await UserModel.findByIdAndUpdate(
+    req.authUser!.id,
+    { licenseType },
+    { new: true }
+  )
+    .select("username email licenseType")
+    .lean();
+
+  if (!user) {
+    return res.status(401).json({ error: "משתמש לא נמצא" });
+  }
+
+  const u = user as unknown as {
+    username: string;
+    email: string;
+    licenseType?: string;
+  };
+  res.json({
+    username: u.username,
+    email: u.email,
+    licenseType,
   });
 });
 
@@ -147,7 +182,7 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 
   const user = await UserModel.findById(req.authUser!.id)
-    .select("username email")
+    .select("username email licenseType")
     .lean();
   if (!user) {
     return res.status(401).json({ error: "משתמש לא נמצא" });
@@ -155,8 +190,16 @@ router.get("/me", requireAuth, async (req, res) => {
 
   await touchLastLogin(req.authUser!.id);
 
-  const u = user as unknown as { username: string; email: string };
-  res.json({ username: u.username, email: u.email });
+  const u = user as unknown as {
+    username: string;
+    email: string;
+    licenseType?: string;
+  };
+  res.json({
+    username: u.username,
+    email: u.email,
+    licenseType: parseLicenseType(u.licenseType) || "",
+  });
 });
 
 export default router;
