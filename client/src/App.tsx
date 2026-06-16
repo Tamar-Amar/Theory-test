@@ -8,6 +8,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import {
   createSession,
   fetchMe,
@@ -490,6 +491,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppShell />
+      <Analytics />
     </BrowserRouter>
   );
 }
