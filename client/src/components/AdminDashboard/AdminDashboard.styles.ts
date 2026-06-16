@@ -40,11 +40,43 @@ export const SectionTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text};
 `;
 
+export const UsersToolbar = styled.div`
+  margin-bottom: 0.65rem;
+`;
+
+export const SearchInput = styled.input`
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: ${({ theme }) => theme.radius.control};
+  border: 1px solid ${({ theme }) => theme.colors.surface2};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.9rem;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.muted};
+  }
+`;
+
 export const TableWrap = styled.div`
   overflow-x: auto;
   border-radius: ${({ theme }) => theme.radius.card};
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   background: ${({ theme }) => theme.colors.surface};
+`;
+
+export const ScrollableTableWrap = styled(TableWrap)`
+  overflow: auto;
+  max-height: min(28rem, 60vh);
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
 `;
 
 export const Table = styled.table`
@@ -62,6 +94,33 @@ export const Th = styled.th`
   border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
 `;
 
+export const SortableTh = styled(Th)<{ $active?: boolean; $narrow?: boolean }>`
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  color: ${({ theme, $active }) =>
+    $active ? theme.colors.text : theme.colors.muted};
+
+  ${({ $narrow }) =>
+    $narrow
+      ? `
+    width: 1%;
+    max-width: 5.5rem;
+  `
+      : ""}
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
+export const SortIndicator = styled.span`
+  display: inline-block;
+  margin-inline-start: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0.85;
+`;
+
 export const Td = styled.td`
   text-align: right;
   padding: 0.55rem 0.75rem;
@@ -73,6 +132,27 @@ export const Td = styled.td`
 export const TdDate = styled(Td)`
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+`;
+
+export const TdPassword = styled(Td)`
+  width: 1%;
+  max-width: 5.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.82rem;
+`;
+
+export const ThActions = styled(Th)`
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+`;
+
+export const TdActions = styled(Td)`
+  width: 1%;
+  text-align: center;
+  vertical-align: middle;
 `;
 
 export const Tr = styled.tr`
@@ -95,15 +175,22 @@ export const Empty = styled.p`
 `;
 
 export const DeleteButton = styled.button`
-  font: inherit;
-  font-size: 0.82rem;
-  padding: 0.35rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
   border-radius: ${({ theme }) => theme.radius.card};
   border: 1px solid ${({ theme }) => theme.colors.danger};
   background: transparent;
   color: ${({ theme }) => theme.colors.danger};
   cursor: pointer;
-  white-space: nowrap;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
 
   &:disabled {
     opacity: 0.55;

@@ -252,6 +252,17 @@ export async function deleteAdminUser(userId: string): Promise<void> {
   if (!res.ok) throw new Error(await parseError(res));
 }
 
+export async function deleteAdminTicket(ticketId: string): Promise<void> {
+  const res = await fetch(
+    apiUrl(`/api/admin/tickets/${encodeURIComponent(ticketId)}`),
+    {
+      method: "DELETE",
+      headers: authHeaders(),
+    }
+  );
+  if (!res.ok) throw new Error(await parseError(res));
+}
+
 export async function submitSupportTicket(
   body: string,
   opts?: { guestName?: string; email?: string }

@@ -24,6 +24,18 @@ router.delete("/users/:userId", async (req, res) => {
   res.status(204).send();
 });
 
+router.delete("/tickets/:ticketId", async (req, res) => {
+  const { ticketId } = req.params;
+  if (!mongoose.isValidObjectId(ticketId)) {
+    return res.status(400).json({ error: "מזהה פנייה לא תקין" });
+  }
+  const deleted = await SupportTicketModel.findByIdAndDelete(ticketId);
+  if (!deleted) {
+    return res.status(404).json({ error: "פנייה לא נמצאה" });
+  }
+  res.status(204).send();
+});
+
 router.get("/stats", async (_req, res) => {
   const userCount = await UserModel.countDocuments();
   const totalAttempts = await AttemptModel.countDocuments();
