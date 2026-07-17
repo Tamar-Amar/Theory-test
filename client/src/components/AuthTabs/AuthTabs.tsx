@@ -2,7 +2,7 @@ import type { AuthMode } from "../../types/auth";
 import * as S from "./AuthTabs.styles";
 
 type Props = {
-  mode: AuthMode;
+  mode: Exclude<AuthMode, "forgot">;
   onMode: (m: AuthMode) => void;
 };
 

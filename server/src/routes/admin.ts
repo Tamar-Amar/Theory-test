@@ -58,7 +58,6 @@ router.get("/stats", async (_req, res) => {
         userId: { $toString: "$_id" },
         username: 1,
         email: 1,
-        passwordPlain: 1,
         attemptCount: { $size: "$atts" },
         createdAt: 1,
         lastLoginAt: 1,
@@ -71,7 +70,6 @@ router.get("/stats", async (_req, res) => {
     userId: row.userId as string,
     username: row.username as string,
     email: (row.email as string) ?? "",
-    password: (row.passwordPlain as string) ?? "",
     attemptCount: row.attemptCount as number,
     registeredAt: row.createdAt
       ? new Date(row.createdAt as Date).toISOString()

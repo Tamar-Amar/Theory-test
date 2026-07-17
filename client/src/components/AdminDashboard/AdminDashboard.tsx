@@ -25,7 +25,7 @@ function formatWhen(iso: string | null | undefined) {
 
 type UserSortKey = keyof Pick<
   AdminUserRow,
-  "username" | "email" | "registeredAt" | "lastLoginAt" | "password" | "attemptCount"
+  "username" | "email" | "registeredAt" | "lastLoginAt" | "attemptCount"
 >;
 
 function TrashIcon() {
@@ -53,7 +53,6 @@ const USER_SORT_LABELS: Record<UserSortKey, string> = {
   email: "אימייל",
   registeredAt: "תאריך הרשמה",
   lastLoginAt: "כניסה אחרונה",
-  password: "סיסמה",
   attemptCount: "מבחנים שהושלמו",
 };
 
@@ -305,7 +304,6 @@ export function AdminDashboard() {
                           <S.SortableTh
                             key={key}
                             $active={userSortKey === key}
-                            $narrow={key === "password"}
                             onClick={() => handleUserSort(key)}
                             aria-sort={
                               userSortKey === key
@@ -334,9 +332,6 @@ export function AdminDashboard() {
                         <S.Td>{u.email || "-"}</S.Td>
                         <S.TdDate>{formatWhen(u.registeredAt)}</S.TdDate>
                         <S.TdDate>{formatWhen(u.lastLoginAt)}</S.TdDate>
-                        <S.TdPassword title={u.password || undefined}>
-                          {u.password || "-"}
-                        </S.TdPassword>
                         <S.Td>{u.attemptCount}</S.Td>
                         <S.TdActions>
                           <S.DeleteButton

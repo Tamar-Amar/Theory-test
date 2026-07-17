@@ -164,6 +164,29 @@ export async function login(
   return res.json();
 }
 
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const res = await fetch(apiUrl("/api/auth/forgot-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export async function resetPassword(
+  token: string,
+  password: string
+): Promise<{ message: string }> {
+  const res = await fetch(apiUrl("/api/auth/reset-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
 export async function fetchMe(): Promise<AuthUser> {
   const res = await fetch(apiUrl("/api/auth/me"), { headers: authHeaders() });
   if (!res.ok) throw new Error(await parseError(res));
@@ -218,7 +241,6 @@ export type AdminUserRow = {
   userId: string;
   username: string;
   email: string;
-  password: string;
   attemptCount: number;
   registeredAt: string | null;
   lastLoginAt: string | null;

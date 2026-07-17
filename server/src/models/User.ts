@@ -19,11 +19,12 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
     passwordHash: { type: String, required: true },
-    /** לצפייה מנהל בלבד - נשמר בהרשמה */
-    passwordPlain: { type: String },
     /** סוג הרישיון לתרגול — B, A, C, C1, D, 1 */
     licenseType: { type: String, default: "" },
     lastLoginAt: { type: Date },
+    /** hash של טוקן איפוס סיסמה (לא הטוקן הגולמי) */
+    passwordResetTokenHash: { type: String, default: null },
+    passwordResetExpires: { type: Date, default: null },
   },
   { collection: "users", timestamps: true }
 );

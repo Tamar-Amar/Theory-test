@@ -94,20 +94,12 @@ export const Th = styled.th`
   border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
 `;
 
-export const SortableTh = styled(Th)<{ $active?: boolean; $narrow?: boolean }>`
+export const SortableTh = styled(Th)<{ $active?: boolean }>`
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
   color: ${({ theme, $active }) =>
     $active ? theme.colors.text : theme.colors.muted};
-
-  ${({ $narrow }) =>
-    $narrow
-      ? `
-    width: 1%;
-    max-width: 5.5rem;
-  `
-      : ""}
 
   &:hover {
     color: ${({ theme }) => theme.colors.text};
@@ -132,15 +124,6 @@ export const Td = styled.td`
 export const TdDate = styled(Td)`
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-`;
-
-export const TdPassword = styled(Td)`
-  width: 1%;
-  max-width: 5.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.82rem;
 `;
 
 export const ThActions = styled(Th)`

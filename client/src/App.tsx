@@ -21,6 +21,7 @@ import {
   type QuizQuestion,
   type SubmitResponse,
 } from "./api";
+import { AccessibilityWidget } from "./components/AccessibilityWidget/AccessibilityWidget";
 import { AdminDashboard } from "./components/AdminDashboard/AdminDashboard";
 import { AppHeader } from "./components/AppHeader/AppHeader";
 import { AuthPanel } from "./components/AuthPanel/AuthPanel";
@@ -29,6 +30,7 @@ import { LandingPage } from "./components/LandingPage/LandingPage";
 import { LegalPage } from "./components/Legal/LegalPage";
 import { LEGAL_DOCS } from "./components/Legal/legalContent";
 import { LicenseRequiredNotice } from "./components/LicenseRequiredNotice/LicenseRequiredNotice";
+import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
 import { PersonalStats } from "./components/PersonalStats/PersonalStats";
 import { LearningArea } from "./components/LearningArea/LearningArea";
@@ -37,13 +39,13 @@ import * as LearningStyles from "./components/LearningArea/LearningArea.styles";
 import { PracticeSubNav } from "./components/PracticeArea/PracticeSubNav";
 import { QuizSetup } from "./components/QuizSetup/QuizSetup";
 import { QuizView } from "./components/QuizView/QuizView";
+import { ResetPasswordPage } from "./components/ResetPasswordPage/ResetPasswordPage";
 import { ResultsView } from "./components/ResultsView/ResultsView";
 import { SupportTicketForm } from "./components/SupportTicketForm/SupportTicketForm";
 import { UserBar } from "./components/UserBar/UserBar";
 import { NARROW_SCREEN_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
 import { NarrowColumn, QuizColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
-import { LoadingState } from "./components/LoadingState/LoadingState";
 
 type Phase = "setup" | "quiz" | "results";
 
@@ -310,6 +312,18 @@ function AppShell() {
           }
         />
         <Route
+          path="/reset-password"
+          element={
+            <PageContainer>
+              <AppHeader
+                title="תרגול תאוריה"
+                subtitle="איפוס סיסמה"
+              />
+              <ResetPasswordPage />
+            </PageContainer>
+          }
+        />
+        <Route
           path="/contact"
           element={
             <PageContainer showLogin wide>
@@ -491,6 +505,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppShell />
+      <AccessibilityWidget />
       <Analytics />
     </BrowserRouter>
   );

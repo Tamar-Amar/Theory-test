@@ -56,3 +56,42 @@ export const ATTEMPT_EXPIRE_AFTER_SECONDS = Math.max(
   0,
   requireNumberEnv("ATTEMPT_EXPIRE_AFTER_SECONDS")
 );
+
+/** כתובת האתר (לקישורי איפוס סיסמה). ברירת מחדל: ה־origin הראשון ב־CORS */
+export function getClientAppUrl(): string {
+  const fromEnv = process.env.CLIENT_APP_URL?.trim().replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  return getCorsOrigins()[0]!;
+}
+
+export type SmtpConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  from: string;
+};
+
+/** אם חסר SMTP — קישור האיפוס ייכתב ללוג השרת (מתאים לפיתוח מקומי) */
+export function getSmtpConfig(): SmtpConfig | null {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  const from = process.env.SMTP_FROM?.trim();
+  if (!host || !user || !pass || !from) return null;
+
+  const port = Number(process.env.SMTP_PORT?.trim() || "587");
+  if (!Number.isFinite(port) || port <= 0) {
+    throw new Error("Env var SMTP_PORT must be a positive number");
+  }
+
+  return {
+    host,
+    port,
+    secure: process.env.SMTP_SECURE?.trim() === "true" || port === 465,
+    user,
+    pass,
+    from,
+  };
+}

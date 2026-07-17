@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  forgotPassword,
   login,
   register,
   setStoredToken,
@@ -31,9 +32,29 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [forgotDone, setForgotDone] = useState(false);
+
+  const switchMode = (m: AuthMode) => {
+    setErr(null);
+    setForgotDone(false);
+    onMode(m);
+  };
 
   const submit = async () => {
     setErr(null);
+    if (mode === "forgot") {
+      setBusy(true);
+      try {
+        await forgotPassword(email.trim());
+        setForgotDone(true);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "שגיאה");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (mode === "register" && !agreed) {
       setErr("יש לאשר את תנאי השימוש ומדיניות הפרטיות");
       return;
@@ -60,9 +81,47 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
     }
   };
 
+  if (mode === "forgot") {
+    return (
+      <Card variant="narrow">
+        <S.ForgotTitle>שחזור סיסמה</S.ForgotTitle>
+        <S.ForgotHint>
+          הזינו את האימייל שאיתו נרשמתם. אם קיים חשבון, נשלח אליו קישור לאיפוס.
+        </S.ForgotHint>
+        {err && <ErrorAlert compact>{err}</ErrorAlert>}
+        {forgotDone ? (
+          <S.ForgotSuccess>
+            אם קיים חשבון עם כתובת האימייל הזו, נשלח אליה קישור לאיפוס סיסמה.
+            בדקו גם את תיקיית הספאם.
+          </S.ForgotSuccess>
+        ) : (
+          <>
+            <S.FieldsBlock>
+              <FormField id="forgot-email" label="אימייל">
+                <FieldInput
+                  id="forgot-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </FormField>
+            </S.FieldsBlock>
+            <PrimaryButton type="button" disabled={busy} onClick={submit}>
+              {busy ? "ממתין…" : "שליחת קישור לאיפוס"}
+            </PrimaryButton>
+          </>
+        )}
+        <S.ForgotBackLink to="/login" onClick={() => switchMode("login")}>
+          חזרה להתחברות
+        </S.ForgotBackLink>
+      </Card>
+    );
+  }
+
   return (
     <Card variant="narrow">
-      <AuthTabs mode={mode} onMode={onMode} />
+      <AuthTabs mode={mode} onMode={switchMode} />
       {err && <ErrorAlert compact>{err}</ErrorAlert>}
       <S.FieldsBlock>
         <FormField id="auth-user" label="שם משתמש">
@@ -94,6 +153,11 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormField>
+        {mode === "login" && (
+          <S.ForgotLink type="button" onClick={() => switchMode("forgot")}>
+            שכחתי סיסמה
+          </S.ForgotLink>
+        )}
         {mode === "register" && (
           <FormField id="auth-pass2" label="אימות סיסמה">
             <FieldPasswordInput

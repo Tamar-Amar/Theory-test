@@ -2,17 +2,26 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import rateLimit from "express-rate-limit";
-import { getAdminCredentials } from "../config.js";
+import { getAdminCredentials, getClientAppUrl } from "../config.js";
 import { UserModel } from "../models/User.js";
 import { signAdminToken, signUserToken } from "../services/jwt.js";
 import { requireAuth, requireRegularUser } from "../middleware/auth.js";
 import { touchLastLogin } from "../services/userActivity.js";
 import { parseLicenseType } from "../constants/licenseTypes.js";
+import { sendPasswordResetEmail } from "../services/mail.js";
+import {
+  createResetToken,
+  hashResetToken,
+} from "../services/passwordReset.js";
 
 const router = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^\S{3,32}$/;
+const MAX_PASSWORD_LEN = 128;
+
+const FORGOT_OK_MESSAGE =
+  "אם קיים חשבון עם כתובת האימייל הזו, נשלח אליה קישור לאיפוס סיסמה.";
 
 /** הגנה מפני ניחוש סיסמאות (brute-force / credential stuffing) */
 const loginLimiter = rateLimit({
@@ -31,6 +40,22 @@ const registerLimiter = rateLimit({
   message: { error: "יותר מדי ניסיונות הרשמה. נסו שוב מאוחר יותר" },
 });
 
+const forgotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "יותר מדי בקשות איפוס. נסו שוב בעוד מספר דקות" },
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "יותר מדי ניסיונות. נסו שוב בעוד מספר דקות" },
+});
+
 router.post("/register", registerLimiter, async (req, res) => {
   const username =
     typeof req.body?.username === "string" ? req.body.username.trim() : "";
@@ -47,8 +72,10 @@ router.post("/register", registerLimiter, async (req, res) => {
   if (!EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
   }
-  if (password.length < 8) {
-    return res.status(400).json({ error: "סיסמה: לפחות 8 תווים" });
+  if (password.length < 8 || password.length > MAX_PASSWORD_LEN) {
+    return res.status(400).json({
+      error: `סיסמה: בין 8 ל־${MAX_PASSWORD_LEN} תווים`,
+    });
   }
 
   const passwordHash = await bcrypt.hash(password, 11);
@@ -58,7 +85,6 @@ router.post("/register", registerLimiter, async (req, res) => {
       username,
       email: email.toLowerCase(),
       passwordHash,
-      passwordPlain: password,
       lastLoginAt: now,
     });
     const token = signUserToken(user._id.toString(), "user");
@@ -200,6 +226,76 @@ router.get("/me", requireAuth, async (req, res) => {
     email: u.email,
     licenseType: parseLicenseType(u.licenseType) || "",
   });
+});
+
+router.post("/forgot-password", forgotLimiter, async (req, res) => {
+  const email =
+    typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ error: "כתובת אימייל לא תקינה" });
+  }
+
+  const user = await UserModel.findOne({ email });
+  if (!user) {
+    return res.json({ message: FORGOT_OK_MESSAGE });
+  }
+
+  const { rawToken, tokenHash, expiresAt } = createResetToken();
+  user.passwordResetTokenHash = tokenHash;
+  user.passwordResetExpires = expiresAt;
+  await user.save();
+
+  const resetUrl = `${getClientAppUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`;
+
+  try {
+    await sendPasswordResetEmail({ to: email, resetUrl });
+  } catch (e) {
+    console.error("forgot-password email failed:", e);
+    user.passwordResetTokenHash = null;
+    user.passwordResetExpires = null;
+    await user.save();
+    return res.status(502).json({
+      error: "שליחת המייל נכשלה. נסו שוב מאוחר יותר",
+    });
+  }
+
+  return res.json({ message: FORGOT_OK_MESSAGE });
+});
+
+router.post("/reset-password", resetLimiter, async (req, res) => {
+  const token =
+    typeof req.body?.token === "string" ? req.body.token.trim() : "";
+  const password =
+    typeof req.body?.password === "string" ? req.body.password : "";
+
+  if (!token || token.length < 32) {
+    return res.status(400).json({ error: "קישור איפוס לא תקין" });
+  }
+  if (password.length < 8 || password.length > MAX_PASSWORD_LEN) {
+    return res.status(400).json({
+      error: `סיסמה: בין 8 ל־${MAX_PASSWORD_LEN} תווים`,
+    });
+  }
+
+  const tokenHash = hashResetToken(token);
+  const user = await UserModel.findOne({
+    passwordResetTokenHash: tokenHash,
+    passwordResetExpires: { $gt: new Date() },
+  });
+
+  if (!user) {
+    return res.status(400).json({
+      error: "קישור האיפוס אינו תקין או שפג תוקפו. בקשו קישור חדש",
+    });
+  }
+
+  user.passwordHash = await bcrypt.hash(password, 11);
+  user.passwordResetTokenHash = null;
+  user.passwordResetExpires = null;
+  await user.save();
+
+  return res.json({ message: "הסיסמה עודכנה בהצלחה. אפשר להתחבר עכשיו" });
 });
 
 export default router;

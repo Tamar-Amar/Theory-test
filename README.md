@@ -42,6 +42,8 @@ The server **does not inject defaults** for required keys: if something is missi
 | `ADMIN_PASSWORD` | Yes | Admin login password |
 | `CORS_ORIGINS` | Yes | Allowed browser origins, comma-separated (no spaces around URLs) |
 | `ATTEMPT_EXPIRE_AFTER_SECONDS` | Yes | `0` = no TTL; positive = Mongo TTL on attempts (seconds) |
+| `CLIENT_APP_URL` | No | Frontend URL for password-reset links (default: first `CORS_ORIGINS`) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | No | SMTP for forgot-password emails; without them the reset link is logged on the server |
 
 See `server/.env.example` for a template.
 
