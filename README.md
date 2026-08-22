@@ -1,112 +1,119 @@
-# Theory practice - developer guide
+# Theory Test Practice
 
-Full-stack app: **Node** (Express + MongoDB + JWT) and **React** (Vite + TypeScript + styled-components).  
-Questions are stored in MongoDB (`questions` collection). RTL UI for Hebrew learners.
+A full-stack web app for practicing the Israeli driving theory exam. Learners take mock tests in the real exam format, study by topic, and get follow-up questions targeted at their weak spots.
+
+**Live site:** [theory-test.vercel.app](https://theory-test.vercel.app/)
+
+The product is an independent study tool. It is not affiliated with the Israeli Ministry of Transport or the Licensing Authority.
 
 ---
 
-## Quick start (local)
+## Highlights
 
-1. **MongoDB** running and populated with questions (see `server/src/models/Question.ts`).
-2. **Server** (`server/`): copy `server/.env.example` → `server/.env`, fill every variable, then:
-   ```bash
-   cd server && npm install && npm run dev
-   ```
-3. **Client** (`client/`): optional `client/.env` with `VITE_API_BASE_URL` if the API is not proxied; for local dev the Vite proxy sends `/api` to `http://127.0.0.1:4000`.
-   ```bash
-   cd client && npm install && npm run dev
-   ```
+- **Adaptive practice** — per-question stats (accuracy, recency) drive selection: mastered items are skipped, weak items are oversampled (~50% of a focused quiz), remaining slots are random `$sample` from MongoDB.
+- **Exam-faithful UX** — 30-question mock exams, category filters, license-class tagging (B / A / C / C1 / D / tractor), option shuffling, timed sessions, and post-attempt review.
+- **Hebrew-first UI** — RTL layout, legal pages (privacy, terms, accessibility), and an in-app accessibility widget (font scale, contrast, reduced motion).
+- **Production-minded API** — Helmet, explicit CORS allowlist, bcrypt password hashes, signed JWTs, rate-limited auth and password-reset endpoints, fail-fast env validation (no silent defaults).
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────┐          ┌──────────────────────────────┐
+│  React SPA (Vite)       │  HTTPS   │  Express API                 │
+│  TypeScript             │ ──────── │  TypeScript (ESM)            │
+│  styled-components      │  /api/*  │  Helmet · CORS · rate-limit  │
+│  React Router           │          │  JWT (users + admin)         │
+│  Vercel                 │          │  Nodemailer (password reset) │
+└─────────────────────────┘          └──────────────┬───────────────┘
+                                                    │
+                                                    ▼
+                                         MongoDB (Mongoose)
+                                         users · questions · sessions
+                                         attempts · per-question stats
+                                         support tickets
+```
+
+The client is a static SPA. In local development Vite proxies `/api` to the Express server. In production the SPA is hosted on Vercel; the API is a long-running Node process (Render / Railway / Fly — not Vercel serverless, because the server uses `app.listen`).
+
+Question text and images come from the official public dataset on [data.gov.il](https://data.gov.il/). A parser (`parseOfficialTheoryXml`) and a tagging script map license classes from the source XML into MongoDB. The bank itself is **not** committed to this repository.
+
+---
+
+## Stack
+
+| Layer | Technology |
+|--------|------------|
+| Client | React 18, TypeScript, Vite 5, React Router 6, styled-components |
+| Server | Node.js, Express 4, TypeScript (ESM), `tsx` in development |
+| Data | MongoDB, Mongoose 8 |
+| Auth | JWT (`jsonwebtoken`), bcrypt, optional SMTP via Nodemailer |
+| Security | Helmet, CORS origin allowlist, `express-rate-limit` |
+| Analytics | `@vercel/analytics` |
+
+---
+
+## Product surface
+
+| Area | What it does |
+|------|----------------|
+| Public landing | SEO-oriented home page, guest demo quiz, FAQ — no account required |
+| Auth | Register / login, forgot-password (hashed one-time token, 1-hour TTL), `/me` |
+| Practice | Configurable quiz length & category, weak-spot mode, image-free mode |
+| Learning | Topic study and a matching game |
+| Progress | Personal stats from `UserQuestionStat` + completed attempts |
+| Support | In-app tickets stored in MongoDB |
+| Admin | Dashboard (users, tickets, aggregate stats), JWT-gated, user deletion with cascade |
+| Legal | Privacy, terms, accessibility statement; WCAG-oriented controls in the UI |
 
 ---
 
 ## Repository layout
 
-| Path | Role |
-|------|------|
-| `server/src` | REST API, Mongoose models, JWT auth, quiz session & stats |
-| `client/src` | React app, components, theme, `api.ts` |
+```
+client/                 Vite + React SPA
+  src/api.ts            Typed fetch client
+  src/components/       Screens, quiz, admin, legal, a11y widget
+server/
+  src/index.ts          Express bootstrap, Helmet, CORS, routers
+  src/config.ts         Required env — process exits if a key is missing
+  src/routes/           auth · api · admin
+  src/models/           Mongoose schemas
+  src/services/         Quiz picker, stats, JWT, mail, XML parser
+  src/middleware/auth.ts
+  scripts/              Official XML → license-type tagging
+```
 
 ---
 
-## Environment variables
+## Local development
 
-The server **does not inject defaults** for required keys: if something is missing, the process exits with an error.
+**Prerequisites:** Node.js 20+, a running MongoDB instance with a populated `questions` collection.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `PORT` | Yes | HTTP port (number), e.g. `4000` |
-| `MONGODB_URI` or `MONGO_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Secret for signing JWTs (long random string) |
-| `JWT_EXPIRES_DAYS` | Yes | Token lifetime in days (number), e.g. `14` |
-| `ADMIN_USERNAME` | Yes | Admin login username |
-| `ADMIN_PASSWORD` | Yes | Admin login password |
-| `CORS_ORIGINS` | Yes | Allowed browser origins, comma-separated (no spaces around URLs) |
-| `ATTEMPT_EXPIRE_AFTER_SECONDS` | Yes | `0` = no TTL; positive = Mongo TTL on attempts (seconds) |
-| `CLIENT_APP_URL` | No | Frontend URL for password-reset links (default: first `CORS_ORIGINS`) |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | No | SMTP for forgot-password emails; without them the reset link is logged on the server |
+```bash
+# API
+cp server/.env.example server/.env   # fill every required variable
+cd server && npm install && npm run dev
 
-See `server/.env.example` for a template.
+# SPA (new terminal)
+cd client && npm install && npm run dev
+```
 
-### Client (`VITE_*`)
+Vite serves the UI (typically `http://localhost:5173`) and proxies `/api` to `http://127.0.0.1:4000`. For a split deployment, set `VITE_API_BASE_URL` on the client (no trailing slash).
 
-| Variable | When needed | Description |
-|----------|-------------|-------------|
-| `VITE_API_BASE_URL` | Production / split domains | Public base URL of the API, **no trailing slash**, e.g. `https://api.example.com`. Empty = requests go to the same origin as the site (`/api/...`). |
+Required server variables (see `server/.env.example`):
+
+`PORT`, `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_DAYS`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `CORS_ORIGINS`, `ATTEMPT_EXPIRE_AFTER_SECONDS`
+
+Optional: `CLIENT_APP_URL`, SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, …). Without SMTP, password-reset links are written to the server log.
+
+Never commit `.env` files. Only `*.example` templates are tracked.
 
 ---
 
-## Vercel - what to set in Environment Variables
+## Contact
 
-Use **two Vercel projects** (recommended): one for the client, one for the API **or** host the API on Render/Fly/Railway and only put the client on Vercel.
+For collaboration, freelance work, or other inquiries:
 
-### 1) Frontend project (root directory: `client`)
-
-| Name | Value |
-|------|--------|
-| `VITE_API_BASE_URL` | Full URL of your API, e.g. `https://your-api.onrender.com` (no `/` at the end) |
-
-**Build settings (typical):**
-
-- Framework preset: Vite  
-- Root directory: `client`  
-- Build command: `npm run build`  
-- Output directory: `dist`  
-
-`VITE_*` variables are baked in at **build time** - after changing them, trigger a **new deployment**.
-
-### 2) Backend project (only if the API is deployed on Vercel)
-
-Add **all** server variables from the table above, for example:
-
-| Name | Notes |
-|------|--------|
-| `PORT` | Often `3000` or whatever your host expects; Vercel may override via `process.env.PORT` |
-| `MONGODB_URI` | Atlas or other hosted MongoDB |
-| `JWT_SECRET` | Strong random secret |
-| `JWT_EXPIRES_DAYS` | e.g. `14` |
-| `ADMIN_USERNAME` | Your admin user |
-| `ADMIN_PASSWORD` | Strong password |
-| `CORS_ORIGINS` | Must include your live frontend, e.g. `https://your-app.vercel.app` |
-| `ATTEMPT_EXPIRE_AFTER_SECONDS` | Usually `0` |
-
-**Important:** This repo runs a classic Express server (`app.listen`). Vercel is built for static sites and serverless functions. For the API, many teams use **Render / Railway / Fly.io** instead; then only the **client** project on Vercel needs `VITE_API_BASE_URL` pointing at that API URL.
-
----
-
-## Server reference (`server/src`)
-
-| Area | Role |
-|------|------|
-| `routes/auth.ts` | Register, login, `/me` |
-| `routes/api.ts` | Meta, quiz sessions, attempts, tickets, stats |
-| `routes/admin.ts` | Admin stats, user deletion |
-| `middleware/auth.ts` | JWT verification |
-| `services/quizPick.ts` | Question selection (weak areas + random) |
-| `services/userStats.ts` | Per-question stats after each answer |
-| `models/` | User, Question, QuizSession, Attempt, UserQuestionStat, SupportTicket |
-
----
-
-## License
-
-Private project unless you add a license file.
+**Tamar Amar** — [amtamar747@gmail.com](mailto:amtamar747@gmail.com)
