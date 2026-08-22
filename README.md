@@ -35,7 +35,7 @@ The product is an independent study tool. It is not affiliated with the Israeli 
                                          support tickets
 ```
 
-The client is a static SPA. In local development Vite proxies `/api` to the Express server. In production the SPA is hosted on Vercel; the API is a long-running Node process (Render / Railway / Fly — not Vercel serverless, because the server uses `app.listen`).
+The client is a static SPA on Vercel. The API is a long-running Node process (Express), hosted separately from the frontend.
 
 Question text and images come from the official public dataset on [data.gov.il](https://data.gov.il/). A parser (`parseOfficialTheoryXml`) and a tagging script map license classes from the source XML into MongoDB. The bank itself is **not** committed to this repository.
 
@@ -46,7 +46,7 @@ Question text and images come from the official public dataset on [data.gov.il](
 | Layer | Technology |
 |--------|------------|
 | Client | React 18, TypeScript, Vite 5, React Router 6, styled-components |
-| Server | Node.js, Express 4, TypeScript (ESM), `tsx` in development |
+| Server | Node.js, Express 4, TypeScript (ESM) |
 | Data | MongoDB, Mongoose 8 |
 | Auth | JWT (`jsonwebtoken`), bcrypt, optional SMTP via Nodemailer |
 | Security | Helmet, CORS origin allowlist, `express-rate-limit` |
@@ -77,7 +77,7 @@ client/                 Vite + React SPA
   src/components/       Screens, quiz, admin, legal, a11y widget
 server/
   src/index.ts          Express bootstrap, Helmet, CORS, routers
-  src/config.ts         Required env — process exits if a key is missing
+  src/config.ts         Environment configuration
   src/routes/           auth · api · admin
   src/models/           Mongoose schemas
   src/services/         Quiz picker, stats, JWT, mail, XML parser
@@ -87,33 +87,16 @@ server/
 
 ---
 
-## Local development
-
-**Prerequisites:** Node.js 20+, a running MongoDB instance with a populated `questions` collection.
-
-```bash
-# API
-cp server/.env.example server/.env   # fill every required variable
-cd server && npm install && npm run dev
-
-# SPA (new terminal)
-cd client && npm install && npm run dev
-```
-
-Vite serves the UI (typically `http://localhost:5173`) and proxies `/api` to `http://127.0.0.1:4000`. For a split deployment, set `VITE_API_BASE_URL` on the client (no trailing slash).
-
-Required server variables (see `server/.env.example`):
-
-`PORT`, `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_DAYS`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `CORS_ORIGINS`, `ATTEMPT_EXPIRE_AFTER_SECONDS`
-
-Optional: `CLIENT_APP_URL`, SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, …). Without SMTP, password-reset links are written to the server log.
-
-Never commit `.env` files. Only `*.example` templates are tracked.
-
----
-
 ## Contact
 
 For collaboration, freelance work, or other inquiries:
 
 **Tamar Amar** — [amtamar747@gmail.com](mailto:amtamar747@gmail.com)
+
+---
+
+## License
+
+Copyright © 2026 Tamar Amar. All rights reserved.
+
+This source code and the associated product are proprietary. No permission is granted to copy, modify, distribute, or use this software without prior written consent from the copyright holder.
