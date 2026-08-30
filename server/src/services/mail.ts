@@ -1,11 +1,58 @@
 import nodemailer from "nodemailer";
 import { getSmtpConfig } from "../config.js";
 
+export const FEEDBACK_NOTIFY_EMAIL = "amtamar747@gmail.com";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function stars(n: number): string {
+  const filled = Math.min(5, Math.max(0, Math.round(n)));
+  return `${"★".repeat(filled)}${"☆".repeat(5 - filled)} (${filled}/5)`;
+}
+
+async function sendMail(opts: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}): Promise<"sent" | "logged"> {
+  const smtp = getSmtpConfig();
+  if (!smtp) {
+    console.info(`[mail] SMTP לא מוגדר — ${opts.subject}\n${opts.text}`);
+    return "logged";
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    auth: {
+      user: smtp.user,
+      pass: smtp.pass,
+    },
+  });
+
+  await transporter.sendMail({
+    from: smtp.from,
+    to: opts.to,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+  });
+
+  return "sent";
+}
+
 export async function sendPasswordResetEmail(opts: {
   to: string;
   resetUrl: string;
 }): Promise<"sent" | "logged"> {
-  const smtp = getSmtpConfig();
   const subject = "איפוס סיסמה - תרגול תאוריה";
   const text = [
     "התקבלה בקשה לאיפוס סיסמה באתר תרגול תאוריה.",
@@ -28,30 +75,48 @@ export async function sendPasswordResetEmail(opts: {
     </div>
   `;
 
-  if (!smtp) {
-    console.info(
-      `[password-reset] SMTP לא מוגדר — קישור איפוס עבור ${opts.to}:\n${opts.resetUrl}`
-    );
-    return "logged";
-  }
+  return sendMail({ to: opts.to, subject, text, html });
+}
 
-  const transporter = nodemailer.createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.secure,
-    auth: {
-      user: smtp.user,
-      pass: smtp.pass,
-    },
-  });
+export async function sendUxFeedbackCopyEmail(opts: {
+  username: string;
+  email: string;
+  appearanceRating: number;
+  efficiencyRating: number;
+  comment: string;
+}): Promise<"sent" | "logged"> {
+  const comment = opts.comment.trim() || "(ללא טקסט)";
+  const subject = `משוב חדש מ-${opts.username}`;
+  const text = [
+    "התקבל משוב חדש באתר תרגול תאוריה.",
+    "",
+    `משתמש: ${opts.username}`,
+    `אימייל: ${opts.email || "—"}`,
+    `נראות: ${stars(opts.appearanceRating)}`,
+    `יעילות: ${stars(opts.efficiencyRating)}`,
+    "",
+    "משוב חופשי:",
+    comment,
+  ].join("\n");
 
-  await transporter.sendMail({
-    from: smtp.from,
-    to: opts.to,
+  const html = `
+    <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
+      <p>התקבל משוב חדש באתר <strong>תרגול תאוריה</strong>.</p>
+      <p>
+        <strong>משתמש:</strong> ${escapeHtml(opts.username)}<br>
+        <strong>אימייל:</strong> ${escapeHtml(opts.email || "—")}<br>
+        <strong>נראות:</strong> ${stars(opts.appearanceRating)}<br>
+        <strong>יעילות:</strong> ${stars(opts.efficiencyRating)}
+      </p>
+      <p><strong>משוב חופשי:</strong></p>
+      <p style="white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:8px">${escapeHtml(comment)}</p>
+    </div>
+  `;
+
+  return sendMail({
+    to: FEEDBACK_NOTIFY_EMAIL,
     subject,
     text,
     html,
   });
-
-  return "sent";
 }

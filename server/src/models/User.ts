@@ -22,6 +22,8 @@ const UserSchema = new mongoose.Schema(
     /** סוג הרישיון לתרגול — B, A, C, C1, D, 1 */
     licenseType: { type: String, default: "" },
     lastLoginAt: { type: Date },
+    /** מזהה סקר המשוב האחרון שהמשתמש השלים או דילג עליו */
+    uxFeedbackSurveyId: { type: String, default: "" },
     /** hash של טוקן איפוס סיסמה (לא הטוקן הגולמי) */
     passwordResetTokenHash: { type: String, default: null },
     passwordResetExpires: { type: Date, default: null },

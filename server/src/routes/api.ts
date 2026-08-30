@@ -18,6 +18,12 @@ import {
 } from "../constants/licenseTypes.js";
 import { buildQuestionFilter } from "../services/questionFilter.js";
 import { parseLicenseType } from "../constants/licenseTypes.js";
+import {
+  UX_FEEDBACK_SURVEY_ID,
+  needsUxFeedback,
+} from "../constants/uxFeedback.js";
+import { UserFeedbackModel } from "../models/UserFeedback.js";
+import { sendUxFeedbackCopyEmail } from "../services/mail.js";
 
 const router = Router();
 
@@ -303,6 +309,99 @@ router.post("/tickets", optionalAuth, async (req, res) => {
     body,
   });
   res.status(201).json({ ok: true });
+});
+
+function parseStarRating(raw: unknown): number | null {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 5) return null;
+  return n;
+}
+
+async function markUxFeedbackSeen(userId: string): Promise<void> {
+  await UserModel.updateOne(
+    { _id: userId },
+    { $set: { uxFeedbackSurveyId: UX_FEEDBACK_SURVEY_ID } }
+  );
+}
+
+router.post("/feedback", requireAuth, requireRegularUser, async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.authUser!.id);
+  const user = await UserModel.findById(userId)
+    .select("username email uxFeedbackSurveyId")
+    .lean();
+  if (!user) {
+    return res.status(401).json({ error: "משתמש לא נמצא" });
+  }
+
+  const row = user as unknown as {
+    username: string;
+    email: string;
+    uxFeedbackSurveyId?: string;
+  };
+
+  if (!needsUxFeedback(row.uxFeedbackSurveyId)) {
+    return res.status(200).json({ ok: true, alreadyDone: true });
+  }
+
+  const appearanceRating = parseStarRating(req.body?.appearanceRating);
+  const efficiencyRating = parseStarRating(req.body?.efficiencyRating);
+  if (appearanceRating === null || efficiencyRating === null) {
+    return res.status(400).json({ error: "נא לדרג נראות ויעילות בכוכבים (1–5)" });
+  }
+
+  const comment =
+    typeof req.body?.comment === "string" ? req.body.comment.trim() : "";
+  if (comment.length > 2000) {
+    return res.status(400).json({ error: "המשוב החופשי ארוך מדי" });
+  }
+
+  try {
+    await UserFeedbackModel.create({
+      userId,
+      surveyId: UX_FEEDBACK_SURVEY_ID,
+      username: row.username,
+      email: row.email,
+      appearanceRating,
+      efficiencyRating,
+      comment,
+    });
+  } catch (e: unknown) {
+    const code =
+      e && typeof e === "object" && "code" in e
+        ? (e as { code: number }).code
+        : 0;
+    if (code !== 11000) {
+      console.error("feedback create failed:", e);
+      return res.status(500).json({ error: "שמירת המשוב נכשלה" });
+    }
+    await markUxFeedbackSeen(String(userId));
+    return res.status(200).json({ ok: true, alreadyDone: true });
+  }
+
+  try {
+    await sendUxFeedbackCopyEmail({
+      username: row.username,
+      email: row.email,
+      appearanceRating,
+      efficiencyRating,
+      comment,
+    });
+  } catch (e) {
+    console.error("feedback notify email failed:", e);
+  }
+
+  await markUxFeedbackSeen(String(userId));
+  return res.status(201).json({ ok: true });
+});
+
+router.post("/feedback/dismiss", requireAuth, requireRegularUser, async (req, res) => {
+  const userId = req.authUser!.id;
+  const user = await UserModel.findById(userId).select("_id").lean();
+  if (!user) {
+    return res.status(401).json({ error: "משתמש לא נמצא" });
+  }
+  await markUxFeedbackSeen(userId);
+  return res.status(200).json({ ok: true });
 });
 
 router.post("/sessions", requireAuth, requireRegularUser, async (req, res) => {

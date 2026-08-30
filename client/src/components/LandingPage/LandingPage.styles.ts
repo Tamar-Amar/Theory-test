@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 export const Hero = styled.section`
   text-align: center;
@@ -75,6 +75,32 @@ export const CtaGhost = styled.a`
   &:hover {
     border-color: ${({ theme }) => theme.colors.accentBorder};
   }
+`;
+
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+export const SocialLine = styled.p`
+  margin: 2rem auto 0;
+  max-width: 36rem;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text};
+  animation: ${fadeUp} 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+`;
+
+export const SocialEmphasis = styled.span`
+  color: ${({ theme }) => theme.colors.accentDim};
 `;
 
 export const Section = styled.section`

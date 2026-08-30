@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  deleteAdminFeedback,
   deleteAdminTicket,
   deleteAdminUser,
   fetchAdminStats,
+  type AdminFeedbackRow,
   type AdminStats,
   type AdminTicketRow,
   type AdminUserRow,
@@ -114,20 +116,86 @@ function compareTickets(
   );
 }
 
+type FeedbackSortKey = keyof Pick<
+  AdminFeedbackRow,
+  "createdAt" | "username" | "appearanceRating" | "efficiencyRating" | "comment"
+>;
+
+const FEEDBACK_SORT_LABELS: Record<FeedbackSortKey, string> = {
+  createdAt: "תאריך",
+  username: "משתמש",
+  appearanceRating: "נראות",
+  efficiencyRating: "יעילות",
+  comment: "משוב",
+};
+
+function compareFeedback(
+  a: AdminFeedbackRow,
+  b: AdminFeedbackRow,
+  key: FeedbackSortKey,
+  asc: boolean
+) {
+  const mul = asc ? 1 : -1;
+
+  if (key === "createdAt") {
+    return (
+      (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * mul
+    );
+  }
+
+  if (key === "appearanceRating" || key === "efficiencyRating") {
+    return (a[key] - b[key]) * mul;
+  }
+
+  return (
+    String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "he", {
+      sensitivity: "base",
+    }) * mul
+  );
+}
+
+function formatAvg(n: number | null | undefined) {
+  if (n == null || Number.isNaN(n)) return "—";
+  return n.toLocaleString("he-IL", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+  });
+}
+
+function StarsCell({ value }: { value: number }) {
+  const filled = Math.min(5, Math.max(0, Math.round(value)));
+  return (
+    <S.StarsCell aria-label={`${filled} מתוך 5`}>
+      {"★".repeat(filled)}
+      {"☆".repeat(5 - filled)}
+    </S.StarsCell>
+  );
+}
+
 export function AdminDashboard() {
   const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const [ticketDeleteErr, setTicketDeleteErr] = useState<string | null>(null);
+  const [feedbackDeleteErr, setFeedbackDeleteErr] = useState<string | null>(
+    null
+  );
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null);
+  const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(
+    null
+  );
   const [userSearch, setUserSearch] = useState("");
   const [userSortKey, setUserSortKey] = useState<UserSortKey>("username");
   const [userSortAsc, setUserSortAsc] = useState(true);
   const [ticketSearch, setTicketSearch] = useState("");
   const [ticketSortKey, setTicketSortKey] = useState<TicketSortKey>("createdAt");
   const [ticketSortAsc, setTicketSortAsc] = useState(false);
+  const [feedbackSearch, setFeedbackSearch] = useState("");
+  const [feedbackSortKey, setFeedbackSortKey] =
+    useState<FeedbackSortKey>("createdAt");
+  const [feedbackSortAsc, setFeedbackSortAsc] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -145,7 +213,7 @@ export function AdminDashboard() {
     username: string;
   }) {
     const ok = window.confirm(
-      `למחוק את המשתמש "${u.username}"?\n\nיימחקו לצמיתות כל הנתונים שלו: מבחנים, סשנים פעילים, סטטיסטיקות שאלות ופניות תמיכה. לא ניתן לבטל.`
+      `למחוק את המשתמש "${u.username}"?\n\nיימחקו לצמיתות כל הנתונים שלו: מבחנים, סשנים פעילים, סטטיסטיקות שאלות, פניות תמיכה ומשוב. לא ניתן לבטל.`
     );
     if (!ok) return;
     setDeletingId(u.userId);
@@ -179,6 +247,28 @@ export function AdminDashboard() {
     }
   }
 
+  async function handleDeleteFeedback(f: AdminFeedbackRow) {
+    const preview = f.comment.trim()
+      ? f.comment.length > 80
+        ? `${f.comment.slice(0, 80).trim()}…`
+        : f.comment
+      : "(ללא טקסט)";
+    const ok = window.confirm(
+      `למחוק את המשוב מ"${f.username}"?\n\n"${preview}"\n\nלא ניתן לבטל.`
+    );
+    if (!ok) return;
+    setDeletingFeedbackId(f.id);
+    setFeedbackDeleteErr(null);
+    try {
+      await deleteAdminFeedback(f.id);
+      setData(await fetchAdminStats());
+    } catch (e) {
+      setFeedbackDeleteErr(e instanceof Error ? e.message : "מחיקה נכשלה");
+    } finally {
+      setDeletingFeedbackId(null);
+    }
+  }
+
   function handleUserSort(key: UserSortKey) {
     if (userSortKey === key) {
       setUserSortAsc((prev) => !prev);
@@ -195,6 +285,15 @@ export function AdminDashboard() {
     }
     setTicketSortKey(key);
     setTicketSortAsc(key !== "createdAt");
+  }
+
+  function handleFeedbackSort(key: FeedbackSortKey) {
+    if (feedbackSortKey === key) {
+      setFeedbackSortAsc((prev) => !prev);
+      return;
+    }
+    setFeedbackSortKey(key);
+    setFeedbackSortAsc(key !== "createdAt");
   }
 
   const visibleUsers = useMemo(() => {
@@ -231,6 +330,25 @@ export function AdminDashboard() {
       compareTickets(a, b, ticketSortKey, ticketSortAsc)
     );
   }, [data, ticketSearch, ticketSortKey, ticketSortAsc]);
+
+  const visibleFeedbacks = useMemo(() => {
+    if (!data) return [];
+
+    const list = data.feedbacks ?? [];
+    const q = feedbackSearch.trim().toLowerCase();
+    const filtered = q
+      ? list.filter(
+          (f) =>
+            f.username.toLowerCase().includes(q) ||
+            f.email.toLowerCase().includes(q) ||
+            f.comment.toLowerCase().includes(q)
+        )
+      : list;
+
+    return [...filtered].sort((a, b) =>
+      compareFeedback(a, b, feedbackSortKey, feedbackSortAsc)
+    );
+  }, [data, feedbackSearch, feedbackSortKey, feedbackSortAsc]);
 
   if (loading) {
     return <LoadingState />;
@@ -273,6 +391,18 @@ export function AdminDashboard() {
         <S.StatCard>
           <S.StatValue>{data.tickets.length}</S.StatValue>
           <S.StatLabel>פניות אחרונות (עד 200)</S.StatLabel>
+        </S.StatCard>
+        <S.StatCard>
+          <S.StatValue>{data.feedbackCount ?? 0}</S.StatValue>
+          <S.StatLabel>משובים שהתקבלו</S.StatLabel>
+        </S.StatCard>
+        <S.StatCard>
+          <S.StatValue>{formatAvg(data.avgAppearance)}</S.StatValue>
+          <S.StatLabel>ממוצע נראות</S.StatLabel>
+        </S.StatCard>
+        <S.StatCard>
+          <S.StatValue>{formatAvg(data.avgEfficiency)}</S.StatValue>
+          <S.StatLabel>ממוצע יעילות</S.StatLabel>
         </S.StatCard>
       </S.SummaryGrid>
 
@@ -427,6 +557,96 @@ export function AdminDashboard() {
                                 : `מחק פנייה מ${t.username}`
                             }
                             title="מחק פנייה"
+                          >
+                            <TrashIcon />
+                          </S.DeleteButton>
+                        </S.TdActions>
+                      </S.Tr>
+                    ))}
+                  </tbody>
+                </S.Table>
+              </S.ScrollableTableWrap>
+            )}
+          </>
+        )}
+      </div>
+
+      <div>
+        <S.SectionTitle>משוב משתמשים</S.SectionTitle>
+        {feedbackDeleteErr ? <ErrorAlert>{feedbackDeleteErr}</ErrorAlert> : null}
+        {(data.feedbacks ?? []).length === 0 ? (
+          <S.Empty>אין משובים עדיין.</S.Empty>
+        ) : (
+          <>
+            <S.UsersToolbar>
+              <S.SearchInput
+                type="search"
+                value={feedbackSearch}
+                onChange={(e) => setFeedbackSearch(e.target.value)}
+                placeholder="חיפוש לפי משתמש, אימייל או משוב…"
+                aria-label="חיפוש משובים לפי משתמש, אימייל או תוכן"
+              />
+            </S.UsersToolbar>
+            {visibleFeedbacks.length === 0 ? (
+              <S.Empty>לא נמצאו משובים התואמים לחיפוש.</S.Empty>
+            ) : (
+              <S.ScrollableTableWrap>
+                <S.Table>
+                  <thead>
+                    <tr>
+                      {(
+                        Object.keys(FEEDBACK_SORT_LABELS) as FeedbackSortKey[]
+                      ).map((key) => (
+                        <S.SortableTh
+                          key={key}
+                          $active={feedbackSortKey === key}
+                          onClick={() => handleFeedbackSort(key)}
+                          aria-sort={
+                            feedbackSortKey === key
+                              ? feedbackSortAsc
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                          }
+                        >
+                          {FEEDBACK_SORT_LABELS[key]}
+                          {feedbackSortKey === key ? (
+                            <S.SortIndicator aria-hidden>
+                              {feedbackSortAsc ? "↑" : "↓"}
+                            </S.SortIndicator>
+                          ) : null}
+                        </S.SortableTh>
+                      ))}
+                      <S.ThActions>פעולות</S.ThActions>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleFeedbacks.map((f) => (
+                      <S.Tr key={f.id}>
+                        <S.TdDate>{formatWhen(f.createdAt)}</S.TdDate>
+                        <S.Td>{f.username}</S.Td>
+                        <S.Td>
+                          <StarsCell value={f.appearanceRating} />
+                        </S.Td>
+                        <S.Td>
+                          <StarsCell value={f.efficiencyRating} />
+                        </S.Td>
+                        <S.Td>
+                          <S.TicketBody>
+                            {f.comment.trim() ? f.comment : "—"}
+                          </S.TicketBody>
+                        </S.Td>
+                        <S.TdActions>
+                          <S.DeleteButton
+                            type="button"
+                            disabled={deletingFeedbackId !== null}
+                            onClick={() => handleDeleteFeedback(f)}
+                            aria-label={
+                              deletingFeedbackId === f.id
+                                ? "מוחק משוב"
+                                : `מחק משוב מ${f.username}`
+                            }
+                            title="מחק משוב"
                           >
                             <TrashIcon />
                           </S.DeleteButton>

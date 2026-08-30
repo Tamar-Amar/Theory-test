@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DemoQuiz } from "./DemoQuiz";
 import { DEMO_QUESTIONS } from "./demoQuestions";
@@ -26,6 +26,11 @@ const FAQ: { q: string; a: string }[] = [
 export function LandingPage() {
   const [demoOpen, setDemoOpen] = useState(false);
 
+  useEffect(() => {
+    document.title =
+      "תרגול מבחני תאוריה - מבחן מדומה חינם וממוקד טעויות";
+  }, []);
+
   return (
     <>
       <S.Hero>
@@ -39,6 +44,10 @@ export function LandingPage() {
           <S.CtaPrimary to="/login">הרשמה חינם לשמירת התקדמות</S.CtaPrimary>
           <S.CtaGhost href="#demo">נסו מבחן ניסיון</S.CtaGhost>
         </S.CtaRow>
+        <S.SocialLine>
+          הצטרפו ל<S.SocialEmphasis>מאות לומדים</S.SocialEmphasis> שכבר תרגלו כאן{" "}
+          <S.SocialEmphasis>אלפי מבחנים</S.SocialEmphasis>
+        </S.SocialLine>
       </S.Hero>
 
       <S.Section>

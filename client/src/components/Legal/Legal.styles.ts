@@ -11,6 +11,11 @@ export const Article = styled.article`
   @media (max-width: 600px) {
     padding: 1.25rem 1.1rem;
   }
+
+  a {
+    color: ${({ theme }) => theme.colors.accentDim};
+    font-weight: 600;
+  }
 `;
 
 export const Title = styled.h1`

@@ -80,6 +80,8 @@ export type AuthUser = {
   email: string;
   licenseType?: string;
   admin?: boolean;
+  /** האם להציג את פופאפ המשוב החד-פעמי */
+  needsUxFeedback?: boolean;
 };
 
 /** פירוט שאלה אחת לאחר מבחן (טקסטים כפי שהוצגו למשתמש) */
@@ -237,6 +239,16 @@ export type AdminTicketRow = {
   createdAt: string;
 };
 
+export type AdminFeedbackRow = {
+  id: string;
+  username: string;
+  email: string;
+  appearanceRating: number;
+  efficiencyRating: number;
+  comment: string;
+  createdAt: string;
+};
+
 export type AdminUserRow = {
   userId: string;
   username: string;
@@ -253,6 +265,10 @@ export type AdminStats = {
   demoAttempts: number;
   users: AdminUserRow[];
   tickets: AdminTicketRow[];
+  feedbackCount: number;
+  avgAppearance: number | null;
+  avgEfficiency: number | null;
+  feedbacks: AdminFeedbackRow[];
 };
 
 export async function fetchAdminStats(): Promise<AdminStats> {
@@ -261,6 +277,30 @@ export async function fetchAdminStats(): Promise<AdminStats> {
   });
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();
+}
+
+export async function submitUxFeedback(payload: {
+  appearanceRating: number;
+  efficiencyRating: number;
+  comment: string;
+}): Promise<void> {
+  const res = await fetch(apiUrl("/api/feedback"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+}
+
+export async function dismissUxFeedback(): Promise<void> {
+  const res = await fetch(apiUrl("/api/feedback/dismiss"), {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
 }
 
 export async function deleteAdminUser(userId: string): Promise<void> {
@@ -277,6 +317,17 @@ export async function deleteAdminUser(userId: string): Promise<void> {
 export async function deleteAdminTicket(ticketId: string): Promise<void> {
   const res = await fetch(
     apiUrl(`/api/admin/tickets/${encodeURIComponent(ticketId)}`),
+    {
+      method: "DELETE",
+      headers: authHeaders(),
+    }
+  );
+  if (!res.ok) throw new Error(await parseError(res));
+}
+
+export async function deleteAdminFeedback(feedbackId: string): Promise<void> {
+  const res = await fetch(
+    apiUrl(`/api/admin/feedback/${encodeURIComponent(feedbackId)}`),
     {
       method: "DELETE",
       headers: authHeaders(),

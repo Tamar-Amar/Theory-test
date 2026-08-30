@@ -44,15 +44,131 @@
     />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="alternate"
+      type="text/plain"
+      href="/llms.txt"
+      title="LLM information"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Heebo", system-ui, sans-serif;
+        color: #1e293b;
+        background: #eef2f7;
+      }
+      .static-home {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+        line-height: 1.65;
+      }
+      .static-home h1 {
+        margin: 0 0 0.75rem;
+        font-size: 2rem;
+        line-height: 1.2;
+      }
+      .static-home h2 {
+        margin: 1.75rem 0 0.6rem;
+        font-size: 1.2rem;
+      }
+      .static-home h3 {
+        margin: 1.1rem 0 0.4rem;
+        font-size: 1.05rem;
+      }
+      .static-home p,
+      .static-home li {
+        color: #334155;
+      }
+      .static-home a {
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <article class="static-home">
+        <h1>תרגול מבחני תאוריה — חינם וממוקד טעויות</h1>
+        <p>
+          אתר זה מיועד ללומדי נהיגה בישראל שמתכוננים למבחן התאוריה. אפשר לתרגל
+          מבחנים מדומים בפורמט הבחינה האמיתית, ללמוד לפי נושאים, ולקבל שאלות
+          שחוזרות על הטעויות שלכם עד שתשלטו בחומר. אין צורך בהרשמה כדי להתחיל.
+          הרשמה חינמית מוסיפה שמירת התקדמות ומיקוד אישי.
+        </p>
+
+        <h2>למי זה מיועד</h2>
+        <p>
+          למי שלומד לרישיון נהיגה בישראל ורוצה להתכונן למבחן התאוריה באופן
+          עצמאי, במחשב או בטלפון, בלי להוריד אפליקציה. מתאים לסוגי רישיון נפוצים
+          כולל B, A, C, C1, D וטרקטור.
+        </p>
+
+        <h2>מה אפשר לעשות באתר</h2>
+        <h3>מבחן מדומה</h3>
+        <p>
+          מבחן התאוריה האמיתי כולל 30 שאלות אמריקאיות, וצריך לענות נכון על לפחות
+          26 מהן (90%) כדי לעבור. התרגול כאן בנוי באותו פורמט כדי להרגיל אתכם
+          לבחינה, כולל שעון ותצוגת תוצאות עם הסברים.
+        </p>
+        <h3>מיקוד על הטעויות שלכם</h3>
+        <p>
+          אחרי הרשמה המערכת זוכרת על אילו שאלות טעיתם, כמה פעמים ומתי, ומחזירה
+          אותן בתדירות גבוהה יותר עד שתשלטו בהן. כך לא מבזבזים זמן על מה שכבר
+          ידוע.
+        </p>
+        <h3>למידה לפי נושאים</h3>
+        <p>
+          בנוסף למבחן המלא אפשר לתרגל לפי נושא, לראות תשובות נכונות והסברים,
+          ולעקוב אחרי אחוז הצלחה ונושאים שדורשים חיזוק.
+        </p>
+
+        <h2>איך מתחילים</h2>
+        <p>
+          אפשר להתחיל מבחן ניסיון מהדף הראשי בלי חשבון. כדי לשמור התקדמות ולקבל
+          שאלות ממוקדות לפי טעויות,
+          <a href="/login">הירשמו בחינם</a>.
+        </p>
+        <ul>
+          <li><a href="/login">הרשמה והתחברות</a></li>
+          <li><a href="/contact">פנייה למערכת</a></li>
+          <li><a href="/privacy">מדיניות פרטיות</a></li>
+          <li><a href="/terms">תנאי שימוש</a></li>
+          <li><a href="/accessibility">הצהרת נגישות</a></li>
+          <li><a href="/sitemap.xml">מפת אתר</a></li>
+          <li><a href="/llms.txt">llms.txt — תיאור האתר לאגנטים</a></li>
+        </ul>
+
+        <h2>שאלות נפוצות</h2>
+        <h3>האם התרגול חינמי?</h3>
+        <p>
+          כן. אפשר לתרגל בלי לשלם. מבחן הניסיון פתוח לכולם ללא הרשמה, וההרשמה
+          החינמית מוסיפה שמירת התקדמות ושאלות שממוקדות בטעויות שלכם.
+        </p>
+        <h3>האם צריך להוריד אפליקציה?</h3>
+        <p>לא. הכול עובד ישירות בדפדפן, גם בנייד וגם במחשב, בלי התקנה.</p>
+        <p>
+          אתר זה הוא כלי תרגול עצמאי ואינו קשור למשרד התחבורה או לרשות הרישוי,
+          ואינו מהווה מקור רשמי.
+        </p>
+
+        <h2>What this site is</h2>
+        <p lang="en">
+          Free Israeli driving-theory practice for learner drivers. Take mock
+          exams in the real exam format, study by topic, and — after a free
+          signup — get follow-up questions targeted at your mistakes. No app
+          install. Independent study tool; not affiliated with the Ministry of
+          Transport or the Licensing Authority.
+        </p>
+      </article>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

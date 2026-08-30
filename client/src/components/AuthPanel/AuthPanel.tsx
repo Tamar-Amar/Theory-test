@@ -124,10 +124,16 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
       <AuthTabs mode={mode} onMode={switchMode} />
       {err && <ErrorAlert compact>{err}</ErrorAlert>}
       <S.FieldsBlock>
-        <FormField id="auth-user" label="שם משתמש">
+        <FormField
+          id="auth-user"
+          label={mode === "login" ? "שם משתמש או אימייל" : "שם משתמש"}
+        >
           <FieldInput
             id="auth-user"
             autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />

@@ -151,6 +151,13 @@ export const TicketBody = styled.div`
   line-height: 1.4;
 `;
 
+export const StarsCell = styled.span`
+  color: #d97706;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`;
+
 export const Empty = styled.p`
   margin: 0;
   color: ${({ theme }) => theme.colors.muted};

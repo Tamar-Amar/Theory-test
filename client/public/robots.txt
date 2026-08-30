@@ -6,4 +6,4 @@ Disallow: /admin
 Disallow: /profile
 
 # TODO: עדכני לכתובת האתר האמיתית שלך אם יש דומיין מותאם
-Sitemap: https://theory-test-drab.vercel.app
+Sitemap: https://theory-test-drab.vercel.app/sitemap.xml

@@ -8,6 +8,7 @@ import { signAdminToken, signUserToken } from "../services/jwt.js";
 import { requireAuth, requireRegularUser } from "../middleware/auth.js";
 import { touchLastLogin } from "../services/userActivity.js";
 import { parseLicenseType } from "../constants/licenseTypes.js";
+import { needsUxFeedback } from "../constants/uxFeedback.js";
 import { sendPasswordResetEmail } from "../services/mail.js";
 import {
   createResetToken,
@@ -119,19 +120,19 @@ router.post("/register", registerLimiter, async (req, res) => {
 });
 
 router.post("/login", loginLimiter, async (req, res) => {
-  const username =
+  const identifier =
     typeof req.body?.username === "string" ? req.body.username.trim() : "";
   const password =
     typeof req.body?.password === "string" ? req.body.password : "";
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "חסר שם משתמש או סיסמה" });
+  if (!identifier || !password) {
+    return res.status(400).json({ error: "חסר שם משתמש / אימייל או סיסמה" });
   }
 
   const adminCreds = getAdminCredentials();
   if (
     adminCreds.password &&
-    username === adminCreds.username &&
+    identifier === adminCreds.username &&
     password === adminCreds.password
   ) {
     const token = signAdminToken();
@@ -145,14 +146,16 @@ router.post("/login", loginLimiter, async (req, res) => {
     });
   }
 
-  const user = await UserModel.findOne({ username });
+  const user = await UserModel.findOne({
+    $or: [{ username: identifier }, { email: identifier.toLowerCase() }],
+  });
   if (!user) {
-    return res.status(401).json({ error: "שם משתמש או סיסמה שגויים" });
+    return res.status(401).json({ error: "שם משתמש / אימייל או סיסמה שגויים" });
   }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
-    return res.status(401).json({ error: "שם משתמש או סיסמה שגויים" });
+    return res.status(401).json({ error: "שם משתמש / אימייל או סיסמה שגויים" });
   }
 
   await touchLastLogin(user._id.toString());
@@ -164,6 +167,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       username: user.username,
       email: user.email,
       licenseType: parseLicenseType(user.licenseType) || "",
+      needsUxFeedback: needsUxFeedback(user.uxFeedbackSurveyId),
     },
   });
 });
@@ -208,7 +212,7 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 
   const user = await UserModel.findById(req.authUser!.id)
-    .select("username email licenseType")
+    .select("username email licenseType uxFeedbackSurveyId")
     .lean();
   if (!user) {
     return res.status(401).json({ error: "משתמש לא נמצא" });
@@ -220,11 +224,13 @@ router.get("/me", requireAuth, async (req, res) => {
     username: string;
     email: string;
     licenseType?: string;
+    uxFeedbackSurveyId?: string;
   };
   res.json({
     username: u.username,
     email: u.email,
     licenseType: parseLicenseType(u.licenseType) || "",
+    needsUxFeedback: needsUxFeedback(u.uxFeedbackSurveyId),
   });
 });
 

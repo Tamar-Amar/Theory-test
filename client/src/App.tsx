@@ -26,9 +26,11 @@ import { AdminDashboard } from "./components/AdminDashboard/AdminDashboard";
 import { AppHeader } from "./components/AppHeader/AppHeader";
 import { AuthPanel } from "./components/AuthPanel/AuthPanel";
 import { ErrorAlert } from "./components/ErrorAlert/ErrorAlert";
+import { FeedbackPopup } from "./components/FeedbackPopup/FeedbackPopup";
 import { LandingPage } from "./components/LandingPage/LandingPage";
 import { LegalPage } from "./components/Legal/LegalPage";
 import { LEGAL_DOCS } from "./components/Legal/legalContent";
+import { NotFoundPage } from "./components/NotFoundPage/NotFoundPage";
 import { LicenseRequiredNotice } from "./components/LicenseRequiredNotice/LicenseRequiredNotice";
 import { LoadingState } from "./components/LoadingState/LoadingState";
 import { PageContainer } from "./components/PageContainer/PageContainer";
@@ -48,6 +50,25 @@ import { NarrowColumn, QuizColumn } from "./styles/layout";
 import type { AuthMode } from "./types/auth";
 
 type Phase = "setup" | "quiz" | "results";
+
+const UX_FEEDBACK_SESSION_KEY = "theory_ux_feedback";
+
+function readUxFeedbackSession(): boolean {
+  try {
+    return sessionStorage.getItem(UX_FEEDBACK_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeUxFeedbackSession(open: boolean) {
+  try {
+    if (open) sessionStorage.setItem(UX_FEEDBACK_SESSION_KEY, "1");
+    else sessionStorage.removeItem(UX_FEEDBACK_SESSION_KEY);
+  } catch {
+    /* מתעלמים - sessionStorage לא זמין */
+  }
+}
 
 /** דפים משפטיים לאורחים — כל אחד עטוף ב-PageContainer משלו */
 function guestLegalRoutes() {
@@ -88,6 +109,7 @@ function AppShell() {
   const isNarrowScreen = useMediaQuery(NARROW_SCREEN_QUERY);
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [showUxFeedback, setShowUxFeedback] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
 
   const [phase, setPhase] = useState<Phase>("setup");
@@ -131,7 +153,16 @@ function AppShell() {
       }
       try {
         const me = await fetchMe();
-        if (!cancelled) setUser(me);
+        if (!cancelled) {
+          setUser(me);
+          if (
+            !me.admin &&
+            me.needsUxFeedback &&
+            readUxFeedbackSession()
+          ) {
+            setShowUxFeedback(true);
+          }
+        }
       } catch {
         setStoredToken(null);
       } finally {
@@ -176,6 +207,10 @@ function AppShell() {
   const handleLoggedIn = useCallback(
     (u: AuthUser) => {
       setUser(u);
+      if (!u.admin && u.needsUxFeedback) {
+        writeUxFeedbackSession(true);
+        setShowUxFeedback(true);
+      }
       navigate(u.admin ? "/admin" : "/profile", { replace: true });
     },
     [navigate]
@@ -265,6 +300,8 @@ function AppShell() {
   const logout = () => {
     setStoredToken(null);
     setUser(null);
+    setShowUxFeedback(false);
+    writeUxFeedbackSession(false);
     setPhase("setup");
     setSessionId(null);
     setQuestions([]);
@@ -275,6 +312,14 @@ function AppShell() {
 
   const q = questions[current];
   const hasLicenseType = Boolean(user?.licenseType);
+
+  const closeUxFeedback = useCallback(() => {
+    writeUxFeedbackSession(false);
+    setShowUxFeedback(false);
+    setUser((prev) =>
+      prev ? { ...prev, needsUxFeedback: false } : prev
+    );
+  }, []);
 
   if (!authChecked) {
     return (
@@ -338,7 +383,16 @@ function AppShell() {
           }
         />
         {guestLegalRoutes()}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={
+            <PageContainer wide showLogin>
+              <NarrowColumn>
+                <NotFoundPage />
+              </NarrowColumn>
+            </PageContainer>
+          }
+        />
       </Routes>
     );
   }
@@ -363,14 +417,22 @@ function AppShell() {
             }
           />
           {innerLegalRoutes()}
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route
+            path="*"
+            element={
+              <NarrowColumn>
+                <NotFoundPage />
+              </NarrowColumn>
+            }
+          />
         </Routes>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer wide onLogout={logout} showAppNav>
+    <>
+      <PageContainer wide onLogout={logout} showAppNav>
       <AppHeader
         title="תרגול תאוריה"
         subtitle="תרגול עם מיקוד על פי תוצאות בחינות קודמות"
@@ -495,9 +557,18 @@ function AppShell() {
           }
         />
         {innerLegalRoutes()}
-        <Route path="*" element={<Navigate to="/profile" replace />} />
+        <Route
+          path="*"
+          element={
+            <NarrowColumn>
+              <NotFoundPage />
+            </NarrowColumn>
+          }
+        />
       </Routes>
     </PageContainer>
+      {showUxFeedback ? <FeedbackPopup onDone={closeUxFeedback} /> : null}
+    </>
   );
 }
 
