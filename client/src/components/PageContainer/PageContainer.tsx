@@ -38,6 +38,7 @@ export function PageContainer({
         showLogin={showLogin}
         onLogout={onLogout}
         showAppNav={showAppNav}
+        admin={admin}
       />
       <S.Wrapper $wide={wide} $admin={admin}>
         <S.Main id="main-content" as="main" tabIndex={-1}>

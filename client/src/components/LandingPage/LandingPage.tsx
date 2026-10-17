@@ -41,7 +41,9 @@ export function LandingPage() {
           בלי הרשמה.
         </S.Lead>
         <S.CtaRow>
-          <S.CtaPrimary to="/login">הרשמה חינם לשמירת התקדמות</S.CtaPrimary>
+          <S.CtaPrimary to="/login" $pulse>
+            הרשמה חינם לגישה מלאה ושמירת התקדמות
+          </S.CtaPrimary>
           <S.CtaGhost href="#demo">נסו מבחן ניסיון</S.CtaGhost>
         </S.CtaRow>
         <S.SocialLine>

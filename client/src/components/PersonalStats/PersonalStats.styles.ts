@@ -182,6 +182,31 @@ export const LicenseIntro = styled.p`
   font-size: 0.95rem;
 `;
 
+export const LicenseCurrentRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  && button {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.45rem;
+
+    & > div {
+      padding: 0.6rem 0.65rem;
+    }
+
+    && button {
+      padding: 0.55rem 0.6rem;
+      font-size: 0.86rem;
+    }
+  }
+`;
+
 export const LicenseCurrent = styled.div`
   font-size: 1.05rem;
   font-weight: 700;
@@ -190,6 +215,7 @@ export const LicenseCurrent = styled.div`
   border-radius: ${({ theme }) => theme.radius.control};
   background: ${({ theme }) => theme.colors.bg};
   border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  white-space: nowrap;
 `;
 
 export const LicenseHint = styled.p`

@@ -43,6 +43,8 @@ import { QuizSetup } from "./components/QuizSetup/QuizSetup";
 import { QuizView } from "./components/QuizView/QuizView";
 import { ResetPasswordPage } from "./components/ResetPasswordPage/ResetPasswordPage";
 import { ResultsView } from "./components/ResultsView/ResultsView";
+import { PassStoryPopup } from "./components/PassStoryPopup/PassStoryPopup";
+import { ShareInvitePopup } from "./components/ShareInvitePopup/ShareInvitePopup";
 import { SupportTicketForm } from "./components/SupportTicketForm/SupportTicketForm";
 import { UserBar } from "./components/UserBar/UserBar";
 import { NARROW_SCREEN_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
@@ -51,23 +53,50 @@ import type { AuthMode } from "./types/auth";
 
 type Phase = "setup" | "quiz" | "results";
 
-const UX_FEEDBACK_SESSION_KEY = "theory_ux_feedback";
+const LOGIN_POPUP_KEY = "theory_login_popup";
 
-function readUxFeedbackSession(): boolean {
-  try {
-    return sessionStorage.getItem(UX_FEEDBACK_SESSION_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+type LoginPopupKind = "share" | "pass" | "feedback";
+type LoginPopupState = LoginPopupKind | "dismissed" | null;
 
-function writeUxFeedbackSession(open: boolean) {
+const LOGIN_POPUPS: LoginPopupKind[] = ["share", "pass", "feedback"];
+
+function readLoginPopup(): LoginPopupState {
   try {
-    if (open) sessionStorage.setItem(UX_FEEDBACK_SESSION_KEY, "1");
-    else sessionStorage.removeItem(UX_FEEDBACK_SESSION_KEY);
+    const value = sessionStorage.getItem(LOGIN_POPUP_KEY);
+    if (value === "share" || value === "pass" || value === "feedback" || value === "dismissed") {
+      return value;
+    }
   } catch {
     /* מתעלמים - sessionStorage לא זמין */
   }
+  return null;
+}
+
+function storeLoginPopup(value: Exclude<LoginPopupState, null>) {
+  try {
+    sessionStorage.setItem(LOGIN_POPUP_KEY, value);
+  } catch {
+    /* מתעלמים - sessionStorage לא זמין */
+  }
+}
+
+function clearLoginPopup() {
+  try {
+    sessionStorage.removeItem(LOGIN_POPUP_KEY);
+  } catch {
+    /* מתעלמים - sessionStorage לא זמין */
+  }
+}
+
+/** בחירה אחת לביקור. רענון שומר את אותה בחירה עד שסוגרים. */
+function chooseLoginPopup(force: boolean): Exclude<LoginPopupState, null> {
+  if (!force) {
+    const existing = readLoginPopup();
+    if (existing) return existing;
+  }
+  const picked = LOGIN_POPUPS[Math.floor(Math.random() * LOGIN_POPUPS.length)]!;
+  storeLoginPopup(picked);
+  return picked;
 }
 
 /** דפים משפטיים לאורחים — כל אחד עטוף ב-PageContainer משלו */
@@ -109,7 +138,7 @@ function AppShell() {
   const isNarrowScreen = useMediaQuery(NARROW_SCREEN_QUERY);
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [showUxFeedback, setShowUxFeedback] = useState(false);
+  const [loginPopup, setLoginPopup] = useState<LoginPopupState>(readLoginPopup);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
 
   const [phase, setPhase] = useState<Phase>("setup");
@@ -155,12 +184,8 @@ function AppShell() {
         const me = await fetchMe();
         if (!cancelled) {
           setUser(me);
-          if (
-            !me.admin &&
-            me.needsUxFeedback &&
-            readUxFeedbackSession()
-          ) {
-            setShowUxFeedback(true);
+          if (!me.admin) {
+            setLoginPopup(chooseLoginPopup(false));
           }
         }
       } catch {
@@ -207,9 +232,8 @@ function AppShell() {
   const handleLoggedIn = useCallback(
     (u: AuthUser) => {
       setUser(u);
-      if (!u.admin && u.needsUxFeedback) {
-        writeUxFeedbackSession(true);
-        setShowUxFeedback(true);
+      if (!u.admin) {
+        setLoginPopup(chooseLoginPopup(true));
       }
       navigate(u.admin ? "/admin" : "/profile", { replace: true });
     },
@@ -300,8 +324,8 @@ function AppShell() {
   const logout = () => {
     setStoredToken(null);
     setUser(null);
-    setShowUxFeedback(false);
-    writeUxFeedbackSession(false);
+    setLoginPopup(null);
+    clearLoginPopup();
     setPhase("setup");
     setSessionId(null);
     setQuestions([]);
@@ -313,12 +337,9 @@ function AppShell() {
   const q = questions[current];
   const hasLicenseType = Boolean(user?.licenseType);
 
-  const closeUxFeedback = useCallback(() => {
-    writeUxFeedbackSession(false);
-    setShowUxFeedback(false);
-    setUser((prev) =>
-      prev ? { ...prev, needsUxFeedback: false } : prev
-    );
+  const dismissLoginPopup = useCallback(() => {
+    storeLoginPopup("dismissed");
+    setLoginPopup("dismissed");
   }, []);
 
   if (!authChecked) {
@@ -407,6 +428,8 @@ function AppShell() {
           <UserBar username={user.username} email={user.email} />
         </AppHeader>
         <Routes>
+          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="/login" element={<Navigate to="/admin" replace />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route
             path="/contact"
@@ -567,7 +590,15 @@ function AppShell() {
         />
       </Routes>
     </PageContainer>
-      {showUxFeedback ? <FeedbackPopup onDone={closeUxFeedback} /> : null}
+      {location.pathname === "/profile" && loginPopup === "feedback" ? (
+        <FeedbackPopup onDone={dismissLoginPopup} />
+      ) : null}
+      {location.pathname === "/profile" && loginPopup === "share" ? (
+        <ShareInvitePopup onClose={dismissLoginPopup} />
+      ) : null}
+      {location.pathname === "/profile" && loginPopup === "pass" ? (
+        <PassStoryPopup onClose={dismissLoginPopup} />
+      ) : null}
     </>
   );
 }

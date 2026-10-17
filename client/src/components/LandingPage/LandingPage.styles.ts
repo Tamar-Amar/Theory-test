@@ -33,7 +33,19 @@ export const CtaRow = styled.div`
   margin-top: 1.5rem;
 `;
 
-export const CtaPrimary = styled(Link)`
+const ctaBlink = keyframes`
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    opacity: 0.78;
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+`;
+
+export const CtaPrimary = styled(Link)<{ $pulse?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -49,12 +61,19 @@ export const CtaPrimary = styled(Link)`
   font-size: 1rem;
   text-decoration: none;
   transition: filter 0.12s ease, transform 0.12s ease;
+  animation: ${({ $pulse }) => ($pulse ? ctaBlink : "none")} 3.2s ease-in-out infinite;
 
   &:hover {
     filter: brightness(1.05);
+    animation-play-state: paused;
+    opacity: 1;
   }
   &:active {
     transform: scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 `;
 

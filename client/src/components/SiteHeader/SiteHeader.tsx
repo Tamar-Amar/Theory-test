@@ -73,6 +73,8 @@ type Props = {
   showAppNav?: boolean;
   /** קיים רק כשהמשתמש מחובר — מציג התנתקות במקום התחברות */
   onLogout?: () => void;
+  /** מסך מנהל — הלוגו חוזר ללוח הבקרה */
+  admin?: boolean;
 };
 
 function AppNav() {
@@ -97,13 +99,15 @@ export function SiteHeader({
   showLogin = false,
   showAppNav = false,
   onLogout,
+  admin = false,
 }: Props) {
   const loggedIn = Boolean(onLogout);
+  const homeTo = admin ? "/admin" : loggedIn ? "/profile" : "/";
 
   return (
     <S.Bar>
       <S.Inner $wide={wide}>
-        <S.Brand to={loggedIn ? "/profile" : "/"} aria-label="תרגול תאוריה — דף הבית">
+        <S.Brand to={homeTo} aria-label="תרגול תאוריה — דף הבית">
           <S.LogoMark>
             <Logo />
           </S.LogoMark>

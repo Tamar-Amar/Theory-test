@@ -174,22 +174,20 @@ export function PersonalStats({
               {licenseErr ? <S.LicenseHint>{licenseErr}</S.LicenseHint> : null}
             </>
           ) : (
-            <>
+            <S.LicenseCurrentRow>
               <S.LicenseCurrent>{selectedLicenseLabel}</S.LicenseCurrent>
-              <S.LicenseActions>
-                <SecondaryButton
-                  type="button"
-                  onClick={() => {
-                    setSelectedLicense(licenseType);
-                    setEditingLicense(true);
-                    setLicenseErr(null);
-                    setSaveOk(false);
-                  }}
-                >
-                  שינוי סוג הרישיון שנבחר
-                </SecondaryButton>
-              </S.LicenseActions>
-            </>
+              <SecondaryButton
+                type="button"
+                onClick={() => {
+                  setSelectedLicense(licenseType);
+                  setEditingLicense(true);
+                  setLicenseErr(null);
+                  setSaveOk(false);
+                }}
+              >
+                שינוי סוג הרישיון שנבחר
+              </SecondaryButton>
+            </S.LicenseCurrentRow>
           )
         ) : (
           <S.Muted>לא נטענו סוגי רישיון מהמאגר.</S.Muted>
