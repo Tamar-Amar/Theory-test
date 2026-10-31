@@ -64,8 +64,7 @@ export function PageContainer({
               <Logo size={24} />
             </S.OnlyNarrow>
             <S.FooterTagline>
-              כלי לימוד עצמאי. אינו קשור למשרד התחבורה
-              <S.OnlyWide> או לרשות הרישוי</S.OnlyWide>.
+כלי לימוד עצמאי, על בסיס מאגר השאלות של משרד התחבורה.
             </S.FooterTagline>
           </S.FooterBrand>
 

@@ -16,9 +16,10 @@ export const Page = styled.div`
 `;
 
 export const Deco = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
+  z-index: -1;
   pointer-events: none;
 
   @media (max-width: 900px) {

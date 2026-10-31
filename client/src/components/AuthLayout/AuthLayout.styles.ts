@@ -7,16 +7,14 @@ export const Screen = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  overflow: hidden;
-  background: ${({ theme }) => theme.colors.bg};
   padding: clamp(2rem, 6vh, 4.5rem) 1.25rem 4rem;
   box-sizing: border-box;
 `;
 
 export const Deco = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 

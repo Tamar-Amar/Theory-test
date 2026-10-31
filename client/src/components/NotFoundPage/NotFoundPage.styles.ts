@@ -4,7 +4,6 @@ import styled from "styled-components";
 /** דף 404 (Figma 10:915): תוכן ממורכז + צורות רקע */
 export const Root = styled.section`
   position: relative;
-  overflow: hidden;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -16,9 +15,9 @@ export const Root = styled.section`
 `;
 
 export const Deco = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 
   svg {

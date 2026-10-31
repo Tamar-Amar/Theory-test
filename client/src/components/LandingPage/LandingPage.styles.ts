@@ -92,7 +92,6 @@ export const HeroSection = styled.section`
   position: relative;
   overflow: hidden;
   width: 100%;
-  background: ${({ theme }) => theme.colors.bg};
 `;
 
 export const HeroInner = styled.div`
@@ -113,9 +112,9 @@ export const HeroInner = styled.div`
 `;
 
 export const HeroDeco = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 
@@ -211,7 +210,6 @@ export const HeroSecondary = styled(Link)`
 
 export const DemoSection = styled.section`
   width: 100%;
-  background: ${({ theme }) => theme.colors.bg};
   padding-block: 2rem 4rem;
 `;
 
@@ -510,7 +508,6 @@ export const ResultRetry = styled.button`
 
 export const FeaturesSection = styled.section`
   width: 100%;
-  background: ${({ theme }) => theme.colors.bg};
   padding-block: 1.25rem 5rem;
 `;
 
@@ -573,7 +570,6 @@ export const FeatureText = styled.p`
 
 export const FaqSection = styled.section`
   width: 100%;
-  background: ${({ theme }) => theme.colors.bg};
   padding-block: 0 5rem;
 `;
 
