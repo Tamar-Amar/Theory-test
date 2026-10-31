@@ -175,6 +175,17 @@ export const HeroActions = styled.div`
   }
 `;
 
+export const RatingLine = styled.p`
+  margin: 0;
+  padding-top: 0.25rem;
+  font-size: 0.9375rem;
+  color: ${({ theme }) => theme.colors.inkMuted};
+
+  strong {
+    color: ${({ theme }) => theme.colors.ink};
+  }
+`;
+
 export const Stats = styled.div`
   direction: ltr;
   display: flex;

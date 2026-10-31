@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { fetchPublicRating, type PublicRating } from "../../api";
 import { Ring, Triangle, TrafficLight, RoadCurve } from "../Deco/Deco";
 import { StatCard } from "../StatCard/StatCard";
 import { NarrowOnly, WideOnly } from "../Responsive/Responsive";
@@ -42,7 +43,44 @@ function scrollToDemo() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+/** מינימום דירוגים אמיתיים לפני שמציגים ממוצע ומוסיפים אותו לסימון לגוגל */
+const MIN_RATINGS = 10;
+
+/** מוסיף aggregateRating לסימון ה-JSON-LD הסטטי (דירוג אמיתי בלבד) */
+function applyRatingSchema(r: PublicRating) {
+  const el = document.getElementById("ld-json");
+  if (!el || r.average === null) return;
+  try {
+    const data = JSON.parse(el.textContent ?? "");
+    const app = data["@graph"]?.find(
+      (n: { "@type"?: string }) => n["@type"] === "WebApplication",
+    );
+    if (!app) return;
+    app.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: r.average,
+      ratingCount: r.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+    el.textContent = JSON.stringify(data);
+  } catch {
+    /* סימון פגום - לא משנים */
+  }
+}
+
 export function LandingPage() {
+  const [rating, setRating] = useState<PublicRating | null>(null);
+
+  useEffect(() => {
+    void fetchPublicRating().then((r) => {
+      if (r && r.average !== null && r.count >= MIN_RATINGS) {
+        setRating(r);
+        applyRatingSchema(r);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     document.title = "תרגול מבחני תאוריה - מבחן מדומה חינם וממוקד טעויות";
   }, []);
@@ -78,6 +116,12 @@ export function LandingPage() {
                 התחילו מבחן ניסיון
               </S.HeroPrimary>
             </S.HeroActions>
+            {rating ? (
+              <S.RatingLine>
+                ★ <strong>{rating.average}</strong> מתוך 5 · {rating.count}{" "}
+                דירוגים של משתמשים
+              </S.RatingLine>
+            ) : null}
             <S.Stats>
               <StatCard
                 value="6"

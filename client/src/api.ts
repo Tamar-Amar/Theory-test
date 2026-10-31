@@ -225,6 +225,19 @@ export async function recordDemoFinish(): Promise<void> {
   }
 }
 
+export type PublicRating = { count: number; average: number | null };
+
+/** דירוג משתמשים ציבורי (ממוצע מסקר המשוב). null בכישלון. */
+export async function fetchPublicRating(): Promise<PublicRating | null> {
+  try {
+    const res = await fetch(apiUrl("/api/rating"));
+    if (!res.ok) return null;
+    return (await res.json()) as PublicRating;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchUserStats(): Promise<UserStats> {
   const res = await fetch(apiUrl("/api/stats"), { headers: authHeaders() });
   if (!res.ok) throw new Error(await parseError(res));

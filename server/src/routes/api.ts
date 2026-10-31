@@ -109,6 +109,24 @@ router.post("/demo/finish", async (_req, res) => {
   res.status(204).send();
 });
 
+/** דירוג משתמשים ציבורי (ממוצע שני הדירוגים מסקר המשוב) - לדף הנחיתה ולסימון Schema.org */
+router.get("/rating", async (_req, res) => {
+  const [agg] = await UserFeedbackModel.aggregate([
+    {
+      $group: {
+        _id: null,
+        count: { $sum: 1 },
+        avg: { $avg: { $avg: ["$appearanceRating", "$efficiencyRating"] } },
+      },
+    },
+  ]);
+  const count = (agg?.count as number | undefined) ?? 0;
+  const average =
+    count > 0 ? Math.round((agg.avg as number) * 10) / 10 : null;
+  res.set("Cache-Control", "public, max-age=300");
+  res.json({ count, average });
+});
+
 router.get("/stats", requireAuth, requireRegularUser, async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.authUser!.id);
 
