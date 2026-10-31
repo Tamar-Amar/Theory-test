@@ -175,15 +175,39 @@ export const HeroActions = styled.div`
   }
 `;
 
-export const RatingLine = styled.p`
-  margin: 0;
-  padding-top: 0.25rem;
-  font-size: 0.9375rem;
-  color: ${({ theme }) => theme.colors.inkMuted};
+export const RatingBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+`;
 
-  strong {
-    color: ${({ theme }) => theme.colors.ink};
-  }
+export const RatingCaption = styled.span`
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.colors.inkMuted};
+`;
+
+/** 5 כוכבים עם מילוי זהב יחסי לדירוג (שכבה זהובה חתוכה מעל שכבה אפורה) */
+export const RatingStars = styled.span`
+  direction: rtl;
+  position: relative;
+  display: inline-block;
+  padding-top: 0.25rem;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: ${({ theme }) => theme.colors.divider};
+  user-select: none;
+`;
+
+export const RatingFill = styled.span<{ $pct: number }>`
+  position: absolute;
+  top: 0.25rem;
+  right: 0;
+  direction: rtl;
+  width: ${({ $pct }) => $pct}%;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #f5b301;
 `;
 
 export const Stats = styled.div`

@@ -116,11 +116,19 @@ export function LandingPage() {
                 התחילו מבחן ניסיון
               </S.HeroPrimary>
             </S.HeroActions>
-            {rating ? (
-              <S.RatingLine>
-                ★ <strong>{rating.average}</strong> מתוך 5 · {rating.count}{" "}
-                דירוגים של משתמשים
-              </S.RatingLine>
+            {rating && rating.average !== null ? (
+              <S.RatingBox>
+                <S.RatingStars
+                  role="img"
+                  aria-label={`דירוג משתמשים: ${rating.average} מתוך 5`}
+                >
+                  ★★★★★
+                  <S.RatingFill $pct={(rating.average / 5) * 100} aria-hidden>
+                    ★★★★★
+                  </S.RatingFill>
+                </S.RatingStars>
+                <S.RatingCaption>על פי דירוג משתמשים</S.RatingCaption>
+              </S.RatingBox>
             ) : null}
             <S.Stats>
               <StatCard
