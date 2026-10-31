@@ -2,7 +2,7 @@
 
 A full-stack web app for practicing the Israeli driving theory exam. Learners take mock tests in the real exam format, study by topic, and get follow-up questions targeted at their weak spots.
 
-**Live site:** [theory-test.vercel.app](https://theory-test.vercel.app/)
+**Live site:** [theory-test-drab.vercel.app](https://theory-test-drab.vercel.app/)
 
 The product is an independent study tool. It is not affiliated with the Israeli Ministry of Transport or the Licensing Authority.
 

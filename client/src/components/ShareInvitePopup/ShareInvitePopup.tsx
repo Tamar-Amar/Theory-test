@@ -5,7 +5,7 @@ type Props = {
   onClose: () => void;
 };
 
-const PUBLIC_SITE_URL = "https://theory-test.vercel.app";
+const PUBLIC_SITE_URL = "https://theory-test-drab.vercel.app";
 
 function shareUrl(): string {
   const origin = window.location.origin;
