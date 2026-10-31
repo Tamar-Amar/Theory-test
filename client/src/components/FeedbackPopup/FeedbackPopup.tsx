@@ -181,13 +181,14 @@ export function FeedbackPopup({ onDone }: Props) {
 
         <S.Badge aria-hidden>⭐</S.Badge>
         {thanks ? (
-          <S.Thanks id={titleId}>תודה על המשוב!</S.Thanks>
+          <S.Thanks id={titleId}>תודה רבה! המשוב שלכם עוזר לנו.</S.Thanks>
         ) : (
           <>
-            <S.Title id={titleId}>נשמח למשוב</S.Title>
+            <S.Title id={titleId}>איך היה לכם? הדעה שלכם משנה</S.Title>
             <S.Intro>
-              עזרו לנו לשפר את האתר — דירוג קצר על הנראות והיעילות, ואפשר גם
-              לכתוב כמה מילים.
+              האתר חינמי לגמרי ונבנה בשבילכם. חצי דקה של דירוג עוזרת לנו להשתפר,
+              ועוזרת לנבחנים אחרים להגיע אל התרגול הנכון. אפשר גם להוסיף כמה
+              מילים.
             </S.Intro>
             {err && <ErrorAlert compact>{err}</ErrorAlert>}
             <StarRating
@@ -216,7 +217,7 @@ export function FeedbackPopup({ onDone }: Props) {
             </S.FieldWrap>
             <S.Actions>
               <S.PrimaryBtn type="button" disabled={busy} onClick={submit}>
-                {busy ? "שולח…" : "שליחת משוב"}
+                {busy ? "שולח…" : "שליחת הדירוג"}
               </S.PrimaryBtn>
               <S.GhostBtn
                 type="button"
