@@ -8,6 +8,7 @@ import { CounterModel, DEMO_FINISH_COUNTER } from "../models/Counter.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import { deleteUserAndRelatedData } from "../services/deleteUserCascade.js";
 import { registeredAtFromObjectId } from "../services/userActivity.js";
+import { getBroadcastStatus, startBroadcast } from "../services/broadcast.js";
 
 const router = Router();
 
@@ -49,6 +50,55 @@ router.delete("/feedback/:feedbackId", async (req, res) => {
   res.status(204).send();
 });
 
+const MAX_SUBJECT_LENGTH = 200;
+const MAX_BODY_LENGTH = 10_000;
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+/** שליחת הודעה זהה לכל המשתמשים שיש להם כתובת אימייל (רצה ברקע) */
+router.post("/broadcast-email", async (req, res) => {
+  const subject =
+    typeof req.body?.subject === "string" ? req.body.subject.trim() : "";
+  const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
+
+  if (!subject || subject.length > MAX_SUBJECT_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `נושא ההודעה חובה (עד ${MAX_SUBJECT_LENGTH} תווים)` });
+  }
+  if (!body || body.length > MAX_BODY_LENGTH) {
+    return res.status(400).json({
+      error: `תוכן ההודעה חובה (עד ${MAX_BODY_LENGTH.toLocaleString("en-US")} תווים)`,
+    });
+  }
+  if (getBroadcastStatus().running) {
+    return res.status(409).json({ error: "שליחה אחרת כבר מתבצעת כעת" });
+  }
+
+  const users = await UserModel.find(
+    { email: { $exists: true, $ne: "" } },
+    { email: 1 }
+  ).lean();
+  const recipients = [
+    ...new Set(
+      users
+        .map((u) => String((u as { email?: string }).email ?? "").trim().toLowerCase())
+        .filter((email) => EMAIL_PATTERN.test(email))
+    ),
+  ];
+  if (recipients.length === 0) {
+    return res.status(400).json({ error: "אין משתמשים עם כתובת אימייל" });
+  }
+
+  if (!startBroadcast({ recipients, subject, body })) {
+    return res.status(409).json({ error: "שליחה אחרת כבר מתבצעת כעת" });
+  }
+  res.status(202).json({ recipients: recipients.length });
+});
+
+router.get("/broadcast-email/status", (_req, res) => {
+  res.json(getBroadcastStatus());
+});
+
 router.get("/stats", async (_req, res) => {
   const userCount = await UserModel.countDocuments();
   const totalAttempts = await AttemptModel.countDocuments();
@@ -71,6 +121,7 @@ router.get("/stats", async (_req, res) => {
         userId: { $toString: "$_id" },
         username: 1,
         email: 1,
+        licenseType: 1,
         attemptCount: { $size: "$atts" },
         createdAt: 1,
         lastLoginAt: 1,
@@ -83,6 +134,7 @@ router.get("/stats", async (_req, res) => {
     userId: row.userId as string,
     username: row.username as string,
     email: (row.email as string) ?? "",
+    licenseType: (row.licenseType as string | undefined) ?? "",
     attemptCount: row.attemptCount as number,
     registeredAt: row.createdAt
       ? new Date(row.createdAt as Date).toISOString()

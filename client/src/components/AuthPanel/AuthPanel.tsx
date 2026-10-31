@@ -7,14 +7,15 @@ import {
   type AuthUser,
 } from "../../api";
 import type { AuthMode } from "../../types/auth";
+import { AuthLayout } from "../AuthLayout/AuthLayout";
 import { AuthTabs } from "../AuthTabs/AuthTabs";
-import { Card } from "../Card/Card";
 import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
 import {
   FieldInput,
   FieldPasswordInput,
   FormField,
 } from "../FormField/FormField";
+import { Logo } from "../Logo/Logo";
 import { PrimaryButton } from "../Button/Button";
 import * as S from "./AuthPanel.styles";
 
@@ -83,124 +84,151 @@ export function AuthPanel({ mode, onMode, onLoggedIn }: Props) {
 
   if (mode === "forgot") {
     return (
-      <Card variant="narrow">
-        <S.ForgotTitle>שחזור סיסמה</S.ForgotTitle>
-        <S.ForgotHint>
-          הזינו את האימייל שאיתו נרשמתם. אם קיים חשבון, נשלח אליו קישור לאיפוס.
-        </S.ForgotHint>
-        {err && <ErrorAlert compact>{err}</ErrorAlert>}
-        {forgotDone ? (
-          <S.ForgotSuccess>
-            אם קיים חשבון עם כתובת האימייל הזו, נשלח אליה קישור לאיפוס סיסמה.
-            בדקו גם את תיקיית הספאם.
-          </S.ForgotSuccess>
-        ) : (
-          <>
-            <S.FieldsBlock>
-              <FormField id="forgot-email" label="אימייל">
-                <FieldInput
-                  id="forgot-email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </FormField>
-            </S.FieldsBlock>
-            <PrimaryButton type="button" disabled={busy} onClick={submit}>
-              {busy ? "ממתין…" : "שליחת קישור לאיפוס"}
-            </PrimaryButton>
-          </>
-        )}
-        <S.ForgotBackLink to="/login" onClick={() => switchMode("login")}>
-          חזרה להתחברות
-        </S.ForgotBackLink>
-      </Card>
+      <AuthLayout>
+        <S.Panel>
+          <S.Header>
+            <Logo size={40} />
+            <S.Heading>שחזור סיסמה</S.Heading>
+            <S.Subtitle>
+              הזינו את האימייל שאיתו נרשמתם. אם קיים חשבון, נשלח אליו קישור לאיפוס.
+            </S.Subtitle>
+          </S.Header>
+
+          {err && <ErrorAlert compact>{err}</ErrorAlert>}
+
+          {forgotDone ? (
+            <S.ForgotSuccess>
+              אם קיים חשבון עם כתובת האימייל הזו, נשלח אליה קישור לאיפוס סיסמה.
+              בדקו גם את תיקיית הספאם.
+            </S.ForgotSuccess>
+          ) : (
+            <>
+              <S.FieldsBlock>
+                <FormField id="forgot-email" label="אימייל">
+                  <FieldInput
+                    id="forgot-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </FormField>
+              </S.FieldsBlock>
+              <PrimaryButton type="button" disabled={busy} onClick={submit}>
+                {busy ? "ממתין…" : "שליחת קישור לאיפוס"}
+              </PrimaryButton>
+            </>
+          )}
+
+          <S.BackLink to="/login" onClick={() => switchMode("login")}>
+            → חזרה להתחברות
+          </S.BackLink>
+        </S.Panel>
+      </AuthLayout>
     );
   }
 
   return (
-    <Card variant="narrow">
-      <AuthTabs mode={mode} onMode={switchMode} />
-      {err && <ErrorAlert compact>{err}</ErrorAlert>}
-      <S.FieldsBlock>
-        <FormField
-          id="auth-user"
-          label={mode === "login" ? "שם משתמש או אימייל" : "שם משתמש"}
-        >
-          <FieldInput
+    <AuthLayout>
+      <S.Panel>
+        <S.Header>
+          <Logo size={40} />
+          <S.Heading>{mode === "login" ? "ברוכים השבים" : "הרשמה חינם"}</S.Heading>
+          {mode === "register" && (
+            <S.Subtitle>לגישה מלאה ושמירת התקדמות</S.Subtitle>
+          )}
+        </S.Header>
+
+        <AuthTabs mode={mode} onMode={switchMode} />
+
+        {err && <ErrorAlert compact>{err}</ErrorAlert>}
+
+        <S.FieldsBlock>
+          <FormField
             id="auth-user"
-            autoComplete="username"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </FormField>
-        {mode === "register" && (
-          <FormField id="auth-email" label="אימייל">
+            label={mode === "login" ? "שם משתמש או אימייל" : "שם משתמש"}
+          >
             <FieldInput
-              id="auth-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="auth-user"
+              placeholder={mode === "login" ? "name@example.com" : "tamar"}
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </FormField>
-        )}
-        <FormField id="auth-pass" label="סיסמה">
-          <FieldPasswordInput
-            id="auth-pass"
-            autoComplete={
-              mode === "register" ? "new-password" : "current-password"
-            }
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </FormField>
-        {mode === "login" && (
-          <S.ForgotLink type="button" onClick={() => switchMode("forgot")}>
-            שכחתי סיסמה
-          </S.ForgotLink>
-        )}
-        {mode === "register" && (
-          <FormField id="auth-pass2" label="אימות סיסמה">
+          {mode === "register" && (
+            <FormField id="auth-email" label="אימייל">
+              <FieldInput
+                id="auth-email"
+                type="email"
+                placeholder="name@example.com"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </FormField>
+          )}
+          <FormField id="auth-pass" label="סיסמה">
             <FieldPasswordInput
-              id="auth-pass2"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              id="auth-pass"
+              placeholder="••••••••"
+              autoComplete={
+                mode === "register" ? "new-password" : "current-password"
+              }
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </FormField>
+          {mode === "login" && (
+            <S.ForgotLink type="button" onClick={() => switchMode("forgot")}>
+              שכחתי סיסמה
+            </S.ForgotLink>
+          )}
+          {mode === "register" && (
+            <FormField id="auth-pass2" label="אימות סיסמה">
+              <FieldPasswordInput
+                id="auth-pass2"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </FormField>
+          )}
+        </S.FieldsBlock>
+
+        {mode === "register" && (
+          <S.ConsentRow>
+            <S.ConsentCheckbox
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            <span>
+              קראתי ואני מסכים/ה ל
+              <S.ConsentLink to="/terms" target="_blank">
+                תנאי השימוש
+              </S.ConsentLink>{" "}
+              ול
+              <S.ConsentLink to="/privacy" target="_blank">
+                מדיניות הפרטיות
+              </S.ConsentLink>
+            </span>
+          </S.ConsentRow>
         )}
-      </S.FieldsBlock>
-      {mode === "register" && (
-        <S.ConsentRow>
-          <S.ConsentCheckbox
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-          />
-          <span>
-            קראתי ואני מסכים/ה ל
-            <S.ConsentLink to="/terms" target="_blank">
-              תנאי השימוש
-            </S.ConsentLink>{" "}
-            ול
-            <S.ConsentLink to="/privacy" target="_blank">
-              מדיניות הפרטיות
-            </S.ConsentLink>
-          </span>
-        </S.ConsentRow>
-      )}
-      <PrimaryButton
-        type="button"
-        disabled={busy || (mode === "register" && !agreed)}
-        onClick={submit}
-      >
-        {busy ? "ממתין…" : mode === "login" ? "כניסה" : "הרשמה"}
-      </PrimaryButton>
-    </Card>
+
+        <PrimaryButton
+          type="button"
+          disabled={busy || (mode === "register" && !agreed)}
+          onClick={submit}
+        >
+          {busy ? "ממתין…" : mode === "login" ? "כניסה" : "הרשמה"}
+        </PrimaryButton>
+      </S.Panel>
+    </AuthLayout>
   );
 }

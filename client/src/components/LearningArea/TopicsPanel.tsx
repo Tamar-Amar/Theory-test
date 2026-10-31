@@ -1,14 +1,50 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Meta } from "../../api";
+import { fetchUserStats, type Meta, type UserStats } from "../../api";
 import { LEARNING_TOPICS, resolveQuizCategory } from "./topicContent";
 import * as S from "./TopicsPanel.styles";
 
 type Props = { meta: Meta | null };
 
+/** תיאור קצר לכל נושא (לפי העיצוב ב‑Figma) */
+const BRIEF: Record<string, string> = {
+  legal: "רישיונות, ביטוח ועבירות",
+  risk: "עייפות, הסחות דעת וזמן תגובה",
+  vehicle: "מערכות בלימה, צמיגים ותאורה",
+  signs: "תמרורי אזהרה, הוראה ומודיעין",
+  "traffic-rules": "רמזור, זכות קדימה, עקיפה ומהירות",
+};
+
+const HIGH_THRESHOLD = 80;
+
 export function TopicsPanel({ meta }: Props) {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<UserStats | null>(null);
 
-  const goPractice = (quizCategories: string[]) => {
+  useEffect(() => {
+    let cancelled = false;
+    fetchUserStats()
+      .then((s) => {
+        if (!cancelled) setStats(s);
+      })
+      .catch(() => {
+        /* ללא נתונים — המדדים יוצגו כ‑0% */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const topicPercent = (quizCategories: string[]) => {
+    const cats = new Set(quizCategories);
+    const rows = (stats?.recentAttempts ?? []).filter((a) =>
+      cats.has(a.category)
+    );
+    if (!rows.length) return 0;
+    return Math.round(rows.reduce((s, a) => s + a.percent, 0) / rows.length);
+  };
+
+  const goLearn = (quizCategories: string[]) => {
     const cat = resolveQuizCategory(meta, quizCategories);
     navigate(
       cat ? `/practice?category=${encodeURIComponent(cat)}` : "/practice"
@@ -18,55 +54,43 @@ export function TopicsPanel({ meta }: Props) {
   return (
     <S.Root>
       <S.PageHeader>
-        <S.PageTitle>נושאי למידה</S.PageTitle>
-        <S.TopicsIntro>
-          לפני שמתחילים לתרגל — מומלץ לעבור על הנושאים הבאים. הם מכסים את
-          מה שחוזר הכי הרבה במבחן התאוריה.
-        </S.TopicsIntro>
+        <S.PageTitle>אזור למידה משחקי</S.PageTitle>
+        <S.Subtitle>
+          לומדים את התשובה הנכונה לפני המשחק, ואז בודקים אם הפנמתם.
+        </S.Subtitle>
       </S.PageHeader>
 
       <S.TopicGrid>
-        {LEARNING_TOPICS.map((topic, index) => (
-          <S.TopicCard
-            key={topic.id}
-            $accent={topic.accent}
-            $accentBg={topic.accentBg}
-          >
-            <S.TopicCardHead>
-              <S.TopicIcon aria-hidden="true">{topic.icon}</S.TopicIcon>
-              <S.TopicHeadText>
-                <S.TopicNumber $accent={topic.accent}>
-                  {index + 1}
-                </S.TopicNumber>
-                <S.TopicTitle>{topic.title}</S.TopicTitle>
-              </S.TopicHeadText>
-            </S.TopicCardHead>
+        {LEARNING_TOPICS.map((topic) => {
+          const pct = topicPercent(topic.quizCategories);
+          const high = pct >= HIGH_THRESHOLD;
+          return (
+            <S.Card key={topic.id}>
+              <S.CardHead>
+                <S.Title>{topic.title}</S.Title>
+                <S.Percent $high={high}>{pct}%</S.Percent>
+              </S.CardHead>
 
-            <S.TopicSubtitle>{topic.subtitle}</S.TopicSubtitle>
+              <S.Bar>
+                <S.Fill $pct={pct} $high={high} />
+              </S.Bar>
 
-            <S.IncludesSection>
-              <S.IncludesLabel $accent={topic.accent}>
-                מה זה כולל?
-              </S.IncludesLabel>
-              <S.IncludesList>
-                {topic.includes.map((item, i) => (
-                  <S.IncludesItem key={i}>
-                    <S.Bullet $accent={topic.accent} aria-hidden="true" />
-                    <S.IncludesText>{item}</S.IncludesText>
-                  </S.IncludesItem>
-                ))}
-              </S.IncludesList>
-            </S.IncludesSection>
+              <S.Brief>{BRIEF[topic.id] ?? topic.subtitle}</S.Brief>
 
-            <S.PracticeBtn
-              type="button"
-              $accent={topic.accent}
-              onClick={() => goPractice(topic.quizCategories)}
-            >
-              תרגלו מבחן בנושא
-            </S.PracticeBtn>
-          </S.TopicCard>
-        ))}
+              <S.Buttons>
+                <S.LearnBtn
+                  type="button"
+                  onClick={() => goLearn(topic.quizCategories)}
+                >
+                  למידה
+                </S.LearnBtn>
+                <S.GameBtn type="button" onClick={() => navigate("/practice/game")}>
+                  למשחק זיכרון
+                </S.GameBtn>
+              </S.Buttons>
+            </S.Card>
+          );
+        })}
       </S.TopicGrid>
     </S.Root>
   );

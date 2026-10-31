@@ -253,6 +253,8 @@ export type AdminUserRow = {
   userId: string;
   username: string;
   email: string;
+  /** סוג רישיון שנבחר באזור האישי (ריק אם לא נבחר) */
+  licenseType?: string;
   attemptCount: number;
   registeredAt: string | null;
   lastLoginAt: string | null;
@@ -417,6 +419,41 @@ export async function createLearningSession(
       ...authHeaders(),
     },
     body: JSON.stringify({ count, category }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+/** מצב שליחת ההודעה לכל המשתמשים (מנהל) */
+export type BroadcastStatus = {
+  running: boolean;
+  total: number;
+  sent: number;
+  failed: number;
+  /** "logged" = SMTP לא מוגדר בשרת, ההודעה לא נשלחה בפועל */
+  delivery: "sent" | "logged" | null;
+  subject: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+};
+
+/** מתחיל שליחת הודעה לכל המשתמשים (רצה ברקע בשרת) */
+export async function startAdminBroadcast(
+  subject: string,
+  body: string
+): Promise<{ recipients: number }> {
+  const res = await fetch(apiUrl("/api/admin/broadcast-email"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ subject, body }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export async function fetchAdminBroadcastStatus(): Promise<BroadcastStatus> {
+  const res = await fetch(apiUrl("/api/admin/broadcast-email/status"), {
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();

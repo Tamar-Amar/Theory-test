@@ -1,10 +1,22 @@
 import type { ReactNode } from "react";
-import { Fragment } from "react";
 import { APP_VERSION } from "../../version";
 import { LINKEDIN_PROFILE_URL } from "../../constants/links";
 import { LEGAL_DOCS } from "../Legal/legalContent";
+import { Logo } from "../Logo/Logo";
 import { SiteHeader } from "../SiteHeader/SiteHeader";
 import * as S from "./PageContainer.styles";
+
+/** תוויות מקוצרות לקישורי הפוטר, בהתאמה לעיצוב ב‑Figma */
+const FOOTER_LINK_LABELS: Record<string, ReactNode> = {
+  privacy: "פרטיות",
+  terms: "תנאי שימוש",
+  // במובייל התווית מקוצרת ל"נגישות" (Footer/Mobile)
+  accessibility: (
+    <>
+      <S.OnlyWide>הצהרת </S.OnlyWide>נגישות
+    </>
+  ),
+};
 
 type Props = {
   children: ReactNode;
@@ -12,63 +24,78 @@ type Props = {
   wide?: boolean;
   /** רוחב מקסימלי למסך מנהל — טבלאות רחבות */
   admin?: boolean;
-  /** הצגת אייקון התחברות בכותרת (לאורחים) */
-  showLogin?: boolean;
+  /** עמוד ברוחב מלא (ללא מגביל רוחב) — לדף הנחיתה עם מקטעים במלוא הרוחב */
+  fluid?: boolean;
   /** כשמועבר — המשתמש מחובר וה־header מציג התנתקות */
   onLogout?: () => void;
-  /** תפריט ניווט ראשי — אזור אישי / תרגול / למידה */
-  showAppNav?: boolean;
 };
 
 export function PageContainer({
   children,
   wide = false,
   admin = false,
-  showLogin = false,
+  fluid = false,
   onLogout,
-  showAppNav = false,
 }: Props) {
   return (
-    <Fragment>
+    <S.Shell>
       <a className="skip-link" href="#main-content">
         דלג לתוכן המרכזי
       </a>
-      <SiteHeader
-        wide={wide || admin}
-        showLogin={showLogin}
-        onLogout={onLogout}
-        showAppNav={showAppNav}
-        admin={admin}
-      />
-      <S.Wrapper $wide={wide} $admin={admin}>
-        <S.Main id="main-content" as="main" tabIndex={-1}>
+      <SiteHeader onLogout={onLogout} admin={admin} />
+      {fluid ? (
+        <S.FluidMain id="main-content" as="main" tabIndex={-1}>
           {children}
-        </S.Main>
-      </S.Wrapper>
+        </S.FluidMain>
+      ) : (
+        <S.Wrapper $wide={wide} $admin={admin}>
+          <S.Main id="main-content" as="main" tabIndex={-1}>
+            {children}
+          </S.Main>
+        </S.Wrapper>
+      )}
       <S.Footer role="contentinfo">
-        <S.FooterInner dir="rtl" $wide={wide}>
+        <S.FooterInner dir="rtl">
+          <S.FooterBrand>
+            <S.LogoSlot>
+              <Logo size={28} />
+            </S.LogoSlot>
+            <S.OnlyNarrow>
+              <Logo size={24} />
+            </S.OnlyNarrow>
+            <S.FooterTagline>
+              כלי לימוד עצמאי. אינו קשור למשרד התחבורה
+              <S.OnlyWide> או לרשות הרישוי</S.OnlyWide>.
+            </S.FooterTagline>
+          </S.FooterBrand>
+
           <S.FooterMeta>
-            <span>כל הזכויות שמורות © 2026</span>
-            <S.FooterSep aria-hidden>·</S.FooterSep>
-            <S.FooterExternalLink
-              href={LINKEDIN_PROFILE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              tamar
-            </S.FooterExternalLink>
-            <S.FooterSep aria-hidden>·</S.FooterSep>
-            <S.FooterVersion>{APP_VERSION}</S.FooterVersion>
+            <S.FooterLinks>
+              {LEGAL_DOCS.map((doc) => (
+                <S.FooterLink key={doc.slug} to={`/${doc.slug}`}>
+                  {FOOTER_LINK_LABELS[doc.slug] ?? doc.navLabel}
+                </S.FooterLink>
+              ))}
+              <S.FooterLink to="/contact">צור קשר</S.FooterLink>
+            </S.FooterLinks>
+
+            <S.FooterSep aria-hidden />
+
+            <S.FooterLegal>
+              <span>כל הזכויות שמורות © 2026</span>
+              <S.FooterExternalLink
+                href={LINKEDIN_PROFILE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                tamar
+              </S.FooterExternalLink>
+              <S.FooterDot aria-hidden>·</S.FooterDot>
+              <S.FooterVersion>גרסה {APP_VERSION}</S.FooterVersion>
+            </S.FooterLegal>
           </S.FooterMeta>
-          <S.FooterLinks>
-            {LEGAL_DOCS.map((doc) => (
-              <S.FooterLink key={doc.slug} to={`/${doc.slug}`}>
-                {doc.navLabel}
-              </S.FooterLink>
-            ))}
-          </S.FooterLinks>
         </S.FooterInner>
       </S.Footer>
-    </Fragment>
+    </S.Shell>
   );
 }

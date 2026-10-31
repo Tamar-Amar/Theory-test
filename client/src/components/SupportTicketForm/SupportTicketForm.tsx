@@ -1,10 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { submitSupportTicket } from "../../api";
-import { Card } from "../Card/Card";
 import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
 import { FormField, FieldInput } from "../FormField/FormField";
-import * as FF from "../FormField/FormField.styles";
 import { PrimaryButton } from "../Button/Button";
 import * as S from "./SupportTicketForm.styles";
 
@@ -44,13 +41,11 @@ export function SupportTicketForm({ guest = false, defaultEmail = "" }: Props) {
   };
 
   return (
-    <Card variant={guest ? "narrow" : undefined}>
+    <S.Card>
       <S.Title>פנייה למערכת</S.Title>
-      <S.Intro>
-        {guest
-          ? "אפשר לדבר איתנו גם בלי הרשמה או התחברות:)"
-          : "פנייתכם תישלח למנהל המערכת."}
-      </S.Intro>
+      {guest && (
+        <S.Intro>אפשר לדבר איתנו גם בלי הרשמה או התחברות :)</S.Intro>
+      )}
       {err && <ErrorAlert compact>{err}</ErrorAlert>}
       {ok && <S.Success>הפנייה נשלחה. תודה.</S.Success>}
       <S.Fields>
@@ -58,6 +53,7 @@ export function SupportTicketForm({ guest = false, defaultEmail = "" }: Props) {
           <FormField id="ticket-name" label="שם">
             <FieldInput
               id="ticket-name"
+              placeholder="תמר"
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -69,31 +65,28 @@ export function SupportTicketForm({ guest = false, defaultEmail = "" }: Props) {
           <FieldInput
             id="ticket-email"
             type="email"
+            placeholder="name@example.com"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </FormField>
         <FormField id="ticket-body" label="איך נוכל לעזור?">
-          <FF.Input
+          <S.TextArea
             as="textarea"
             id="ticket-body"
             data-multiline="true"
-            rows={6}
+            placeholder="איך נוכל לעזור?"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={8000}
           />
         </FormField>
       </S.Fields>
+      <S.Note>פנייתכם תישלח למנהל המערכת.</S.Note>
       <PrimaryButton type="button" disabled={busy} onClick={submit}>
         {busy ? "שולח…" : "שליחת פנייה"}
       </PrimaryButton>
-      {guest && (
-        <S.BackRow>
-          <Link to="/login">← חזרה להתחברות</Link>
-        </S.BackRow>
-      )}
-    </Card>
+    </S.Card>
   );
 }

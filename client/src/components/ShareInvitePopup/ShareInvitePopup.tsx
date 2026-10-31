@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { PrimaryButton } from "../Button/Button";
 import * as S from "./ShareInvitePopup.styles";
 
 type Props = {
@@ -46,17 +45,6 @@ async function copyToClipboard(text: string) {
     /* ננסה העתקה ישירה */
   }
   copyWithField(text);
-}
-
-function ShareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden focusable="false">
-      <path
-        fill="currentColor"
-        d="M18 16.1a2.9 2.9 0 0 0-2.2 1l-6.1-3.5a2.8 2.8 0 0 0 0-1.2l6.1-3.5a2.9 2.9 0 1 0-.8-1.4L8.7 11a2.9 2.9 0 1 0 0 2l6.3 3.5a2.9 2.9 0 1 0 3-1.4z"
-      />
-    </svg>
-  );
 }
 
 export function ShareInvitePopup({ onClose }: Props) {
@@ -140,15 +128,10 @@ export function ShareInvitePopup({ onClose }: Props) {
         <S.Close type="button" aria-label="סגירה" onClick={close}>
           ✕
         </S.Close>
-        <S.Badge>
-          <ShareIcon />
-        </S.Badge>
+        <S.Badge aria-hidden>💬</S.Badge>
         <S.Title id={titleId}>ממליצים לחברים?</S.Title>
         <S.Intro>לחצו להעתיק את הלינק ושלחו לחברים שגם מתכוננים לתאוריה.</S.Intro>
-        <S.LinkChip>{message}</S.LinkChip>
-        <PrimaryButton type="button" data-share-copy onClick={() => void copy()}>
-          {copied ? "ההודעה הועתקה" : "העתיקו את ההודעה"}
-        </PrimaryButton>
+        <S.MessageBox>{message}</S.MessageBox>
         {copied && (
           <S.CopiedNote role="status">עכשיו שלחו אותה לחברים.</S.CopiedNote>
         )}
@@ -157,9 +140,14 @@ export function ShareInvitePopup({ onClose }: Props) {
             לא הצלחנו להעתיק. סמנו את ההודעה והעתיקו אותה ידנית.
           </S.CopyError>
         )}
-        <S.Skip type="button" onClick={close}>
-          לא עכשיו
-        </S.Skip>
+        <S.Actions>
+          <S.PrimaryBtn type="button" data-share-copy onClick={() => void copy()}>
+            {copied ? "ההודעה הועתקה" : "העתיקו את ההודעה"}
+          </S.PrimaryBtn>
+          <S.GhostBtn type="button" onClick={close}>
+            לא עכשיו
+          </S.GhostBtn>
+        </S.Actions>
       </S.Modal>
     </S.Overlay>
   );

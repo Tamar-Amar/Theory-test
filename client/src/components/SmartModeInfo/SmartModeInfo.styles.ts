@@ -1,18 +1,34 @@
 import styled from "styled-components";
 
 export const Box = styled.div`
-  margin-bottom: 1rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: ${({ theme }) => theme.radius.control};
-  border: 1px solid ${({ theme }) => theme.colors.accentBorder};
-  background: ${({ theme }) => theme.colors.accentGlow};
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.muted};
-  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.25rem;
+  border-radius: ${({ theme }) => theme.radius.answer};
+  background: ${({ theme }) => theme.colors.orangeTint};
+  text-align: right;
 `;
 
-export const Title = styled.strong`
-  color: ${({ theme }) => theme.colors.text};
-  display: block;
-  margin-bottom: 0.25rem;
+export const Head = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.orangeInk};
+`;
+
+export const Dot = styled.span`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.orange};
+`;
+
+export const Text = styled.p`
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.ink};
 `;

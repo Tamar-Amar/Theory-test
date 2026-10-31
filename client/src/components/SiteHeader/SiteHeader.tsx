@@ -1,143 +1,151 @@
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Logo } from "../Logo/Logo";
 import * as S from "./SiteHeader.styles";
 
-function Logo() {
+type Props = {
+  /** קיים רק כשהמשתמש מחובר — מציג התנתקות */
+  onLogout?: () => void;
+  /** מסך מנהל — הלוגו חוזר ללוח הבקרה והניווט מצטמצם */
+  admin?: boolean;
+};
+
+type Role = "guest" | "user" | "admin";
+
+type NavDef = { to: string; label: string; guestToLogin: boolean };
+
+/** הסדר כאן הוא מימין לשמאל (RTL) — כמו ב‑Header/Desktop */
+function navFor(role: Role): NavDef[] {
+  if (role === "admin") {
+    return [{ to: "/contact", label: "צור קשר", guestToLogin: false }];
+  }
+  return [
+    { to: "/practice", label: "תרגול", guestToLogin: true },
+    { to: "/learning", label: "לימוד לפי נושא", guestToLogin: true },
+    { to: "/profile", label: "הסטטיסטיקה שלי", guestToLogin: true },
+    { to: "/contact", label: "צור קשר", guestToLogin: false },
+  ];
+}
+
+function MenuIcon() {
   return (
-    <svg viewBox="0 0 32 32" role="img" aria-hidden focusable="false">
-      <rect width="32" height="32" rx="8" fill="#2563eb" />
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden focusable="false">
       <path
-        fill="#ffffff"
-        d="M9 9.5h14a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1zm1 2v9h12v-9H10zm2 2h8v1.5h-8V13.5zm0 3h6v1.5h-6V16.5z"
+        d="M4 8H24M4 14H24M8 20H24"
+        stroke="currentColor"
+        strokeWidth={2.2}
+        strokeLinecap="round"
       />
     </svg>
   );
 }
 
-function LoginIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-      <path d="M10 17l5-5-5-5" />
-      <path d="M15 12H3" />
-    </svg>
-  );
-}
+/** כותרת עליונה קבועה (Header/Desktop + Header/Mobile ב‑Figma) */
+export function SiteHeader({ onLogout, admin = false }: Props) {
+  const { pathname } = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-function LogoutIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4" />
-      <path d="M16 17l5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    </svg>
-  );
-}
-
-type Props = {
-  wide?: boolean;
-  /** הצגת אייקון התחברות (לאורחים) */
-  showLogin?: boolean;
-  /** תפריט אזור אישי / תרגול / למידה — למשתמש מחובר */
-  showAppNav?: boolean;
-  /** קיים רק כשהמשתמש מחובר — מציג התנתקות במקום התחברות */
-  onLogout?: () => void;
-  /** מסך מנהל — הלוגו חוזר ללוח הבקרה */
-  admin?: boolean;
-};
-
-function AppNav() {
-  return (
-    <S.Nav role="tablist" aria-label="אזור אפליקציה">
-      <S.HeaderNavLink to="/profile" end role="tab">
-        אזור אישי
-      </S.HeaderNavLink>
-      <S.HeaderNavLink to="/learning" end role="tab">
-        אזור למידה
-      </S.HeaderNavLink>
-      <S.HeaderNavLink to="/practice" role="tab">
-        תרגול
-      </S.HeaderNavLink>
-    </S.Nav>
-  );
-}
-
-/** כותרת עליונה קבועה — לוגו לדף הבית, פנייה למערכת, והתחברות/התנתקות */
-export function SiteHeader({
-  wide = false,
-  showLogin = false,
-  showAppNav = false,
-  onLogout,
-  admin = false,
-}: Props) {
   const loggedIn = Boolean(onLogout);
+  const role: Role = admin ? "admin" : loggedIn ? "user" : "guest";
   const homeTo = admin ? "/admin" : loggedIn ? "/profile" : "/";
+  const links = navFor(role);
+
+  // הכפתור המשני: אורח → התחברות (ובדף ההתחברות עצמו → צור קשר), מחובר → האזור האישי
+  const cta =
+    role === "user"
+      ? { to: "/profile", label: "האזור האישי" }
+      : role === "guest"
+        ? pathname === "/login"
+          ? { to: "/contact", label: "צור קשר" }
+          : { to: "/login", label: "התחברות" }
+        : null;
+
+  // התפריט הנפתח נסגר בניווט ובמקש Escape
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  const renderNav = (mobile: boolean) =>
+    links.map((l) => {
+      const plain = role === "guest" && l.guestToLogin;
+      const to = plain ? "/login" : l.to;
+      if (plain) {
+        const Plain = mobile ? S.MobileNavPlain : S.NavPlain;
+        return (
+          <Plain key={l.label} to={to}>
+            {l.label}
+          </Plain>
+        );
+      }
+      const Item = mobile ? S.MobileNavItem : S.NavItem;
+      return (
+        <Item key={l.label} to={to}>
+          {l.label}
+        </Item>
+      );
+    });
 
   return (
     <S.Bar>
-      <S.Inner $wide={wide}>
-        <S.Brand to={homeTo} aria-label="תרגול תאוריה — דף הבית">
-          <S.LogoMark>
-            <Logo />
-          </S.LogoMark>
-          <S.BrandName>תרגול תאוריה</S.BrandName>
+      <S.Inner>
+        <S.Brand to={homeTo} aria-label="תאוריה — דף הבית">
+          <Logo size={34} />
         </S.Brand>
 
-        {showAppNav && <AppNav />}
+        <S.Nav aria-label="ניווט ראשי">{renderNav(false)}</S.Nav>
 
         <S.Actions>
-          <S.IconLink
-            to="/contact"
-            aria-label="פנייה למערכת"
-            title="פנייה למערכת"
-          >
-            <MailIcon />
-          </S.IconLink>
-
-          {loggedIn ? (
-            <S.AuthButton type="button" onClick={onLogout} aria-label="התנתקות">
-              <LogoutIcon />
-              <S.AuthButtonLabel>התנתקות</S.AuthButtonLabel>
-            </S.AuthButton>
-          ) : showLogin ? (
-            <S.LoginLink to="/login">
-              <LoginIcon />
-              התחברות
-            </S.LoginLink>
+          {role === "user" && onLogout ? (
+            <S.LogoutButton type="button" onClick={onLogout}>
+              התנתקות
+            </S.LogoutButton>
+          ) : null}
+          {cta ? <S.Cta to={cta.to}>{cta.label}</S.Cta> : null}
+          {role === "admin" && onLogout ? (
+            <S.CtaButton type="button" onClick={onLogout}>
+              התנתקות
+            </S.CtaButton>
           ) : null}
         </S.Actions>
+
+        <S.MenuButton
+          type="button"
+          aria-label={menuOpen ? "סגירת התפריט" : "פתיחת התפריט"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <MenuIcon />
+        </S.MenuButton>
       </S.Inner>
+
+      {menuOpen ? (
+        <S.MobilePanel id="mobile-menu">
+          <nav aria-label="תפריט נייד" style={{ display: "contents" }}>
+            {renderNav(true)}
+          </nav>
+          {cta ? <S.MobileCta to={cta.to}>{cta.label}</S.MobileCta> : null}
+          {role === "admin" && onLogout ? (
+            <S.MobileCtaButton type="button" onClick={onLogout}>
+              התנתקות
+            </S.MobileCtaButton>
+          ) : null}
+          {role === "user" && onLogout ? (
+            <S.MobileLogout type="button" onClick={onLogout}>
+              התנתקות
+            </S.MobileLogout>
+          ) : null}
+        </S.MobilePanel>
+      ) : null}
     </S.Bar>
   );
 }

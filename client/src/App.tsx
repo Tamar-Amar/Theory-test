@@ -24,6 +24,7 @@ import {
 import { AccessibilityWidget } from "./components/AccessibilityWidget/AccessibilityWidget";
 import { AdminDashboard } from "./components/AdminDashboard/AdminDashboard";
 import { AppHeader } from "./components/AppHeader/AppHeader";
+import { AuthLayout } from "./components/AuthLayout/AuthLayout";
 import { AuthPanel } from "./components/AuthPanel/AuthPanel";
 import { ErrorAlert } from "./components/ErrorAlert/ErrorAlert";
 import { FeedbackPopup } from "./components/FeedbackPopup/FeedbackPopup";
@@ -106,10 +107,8 @@ function guestLegalRoutes() {
       key={doc.slug}
       path={`/${doc.slug}`}
       element={
-        <PageContainer wide showLogin>
-          <NarrowColumn>
-            <LegalPage slug={doc.slug} />
-          </NarrowColumn>
+        <PageContainer fluid>
+          <LegalPage slug={doc.slug} />
         </PageContainer>
       }
     />
@@ -122,11 +121,7 @@ function innerLegalRoutes() {
     <Route
       key={doc.slug}
       path={`/${doc.slug}`}
-      element={
-        <NarrowColumn>
-          <LegalPage slug={doc.slug} />
-        </NarrowColumn>
-      }
+      element={<LegalPage slug={doc.slug} />}
     />
   ));
 }
@@ -286,6 +281,10 @@ function AppShell() {
     if (current > 0) setCurrent((c) => c - 1);
   };
 
+  const goTo = (i: number) => {
+    if (i >= 0 && i < questions.length) setCurrent(i);
+  };
+
   const handleFinish = async () => {
     if (!sessionId || answers.some((a) => a < 0)) {
       setError("נא לענות על כל השאלות לפני סיום");
@@ -356,7 +355,7 @@ function AppShell() {
         <Route
           path="/"
           element={
-            <PageContainer wide showLogin>
+            <PageContainer fluid>
               <LandingPage />
             </PageContainer>
           }
@@ -364,11 +363,7 @@ function AppShell() {
         <Route
           path="/login"
           element={
-            <PageContainer>
-              <AppHeader
-                title="תרגול תאוריה"
-                subtitle="התחברות או הרשמה מאפשרות לשמור התקדמות ולקבל שאלות ממוקדות לפי טעויות"
-              />
+            <PageContainer fluid>
               <AuthPanel
                 mode={authMode}
                 onMode={setAuthMode}
@@ -380,11 +375,7 @@ function AppShell() {
         <Route
           path="/reset-password"
           element={
-            <PageContainer>
-              <AppHeader
-                title="תרגול תאוריה"
-                subtitle="איפוס סיסמה"
-              />
+            <PageContainer fluid>
               <ResetPasswordPage />
             </PageContainer>
           }
@@ -392,14 +383,10 @@ function AppShell() {
         <Route
           path="/contact"
           element={
-            <PageContainer showLogin wide>
-              <NarrowColumn>
-                <AppHeader
-                  title="תרגול תאוריה"
-                  subtitle="פנייה למערכת"
-                />
+            <PageContainer fluid>
+              <AuthLayout maxWidth={560}>
                 <SupportTicketForm guest />
-              </NarrowColumn>
+              </AuthLayout>
             </PageContainer>
           }
         />
@@ -407,10 +394,8 @@ function AppShell() {
         <Route
           path="*"
           element={
-            <PageContainer wide showLogin>
-              <NarrowColumn>
-                <NotFoundPage />
-              </NarrowColumn>
+            <PageContainer fluid>
+              <NotFoundPage />
             </PageContainer>
           }
         />
@@ -421,12 +406,6 @@ function AppShell() {
   if (user.admin) {
     return (
       <PageContainer admin onLogout={logout}>
-        <AppHeader
-          title="תרגול תאוריה"
-          subtitle="לוח בקרה - מנהל"
-        >
-          <UserBar username={user.username} email={user.email} />
-        </AppHeader>
         <Routes>
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="/login" element={<Navigate to="/admin" replace />} />
@@ -455,7 +434,7 @@ function AppShell() {
 
   return (
     <>
-      <PageContainer wide onLogout={logout} showAppNav>
+      <PageContainer wide onLogout={logout}>
       <AppHeader
         title="תרגול תאוריה"
         subtitle="תרגול עם מיקוד על פי תוצאות בחינות קודמות"
@@ -492,23 +471,25 @@ function AppShell() {
           element={
             <>
               {phase === "setup" && <PracticeSubNav />}
-              <NarrowColumn>
-                {phase === "setup" &&
-                  (hasLicenseType ? (
-                    <QuizSetup
-                      meta={meta}
-                      loadingMeta={loadingMeta}
-                      count={count}
-                      category={category}
-                      starting={starting}
-                      onCount={setCount}
-                      onCategory={setCategory}
-                      onStart={handleStart}
-                    />
-                  ) : (
-                    <LicenseRequiredNotice context="מבחן" />
-                  ))}
-                {phase === "results" && result && (
+              {phase === "setup" &&
+                (hasLicenseType ? (
+                  <QuizSetup
+                    meta={meta}
+                    loadingMeta={loadingMeta}
+                    count={count}
+                    category={category}
+                    starting={starting}
+                    onCount={setCount}
+                    onCategory={setCategory}
+                    onStart={handleStart}
+                  />
+                ) : (
+                  <NarrowColumn>
+                    <LicenseRequiredNotice />
+                  </NarrowColumn>
+                ))}
+              {phase === "results" && result && (
+                <NarrowColumn>
                   <ResultsView
                     result={result}
                     questions={questions}
@@ -516,8 +497,8 @@ function AppShell() {
                     onAgain={() => resetToPath("/practice")}
                     onGoHome={() => resetToPath("/profile")}
                   />
-                )}
-              </NarrowColumn>
+                </NarrowColumn>
+              )}
               {phase === "quiz" && q && (
                 <QuizColumn>
                   <QuizView
@@ -526,9 +507,11 @@ function AppShell() {
                     total={questions.length}
                     progressPercent={progress}
                     elapsedMs={elapsed}
+                    category={category}
                     selectedIndex={selectedForCurrent}
                     answers={answers}
                     onSelectOption={pickOption}
+                    onJump={goTo}
                     onPrev={goPrev}
                     onNext={goNext}
                     onFinish={handleFinish}

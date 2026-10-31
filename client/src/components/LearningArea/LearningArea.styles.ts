@@ -1,124 +1,132 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const Wrap = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  width: 80%;
-  align-self: center;
-  margin-inline: auto;
+  gap: 1.75rem;
+  width: 100%;
 `;
 
-export const TopicsIntro = styled.p`
-  margin: 0 0 1.1rem;
-  font-size: 0.92rem;
-  color: ${({ theme }) => theme.colors.muted};
-  line-height: 1.6;
-`;
+/* ───────── הגדרת משחק (בחירת קטגוריה) ───────── */
 
-export const TopicList = styled.div`
+export const SetupCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+  padding: 1.75rem;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.divider};
+  border-radius: 20px;
 `;
 
-export const TopicItem = styled.section`
-  padding-bottom: 1.1rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
-
-  &:last-child {
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-`;
-
-export const TopicTitle = styled.h3`
-  margin: 0 0 0.45rem;
-  font-size: 1.05rem;
+export const SetupTitle = styled.h2`
+  margin: 0;
+  font-size: 1.0625rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-export const TopicText = styled.p`
-  margin: 0 0 0.55rem;
-  font-size: 0.92rem;
-  line-height: 1.65;
-  color: ${({ theme }) => theme.colors.text};
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+  color: ${({ theme }) => theme.colors.ink};
+  text-align: right;
 `;
 
 export const Intro = styled.p`
   margin: 0;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.muted};
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.inkMuted};
+  text-align: right;
 `;
+
+export const ChipGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+`;
+
+/* ───────── שורה עליונה: כותרת (ימין) + סטטיסטיקות (שמאל) ───────── */
 
 export const TopRow = styled.div`
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.8rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 `;
 
-export const Badge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: ${({ theme }) => theme.radius.pill};
-  border: 1px solid ${({ theme }) => theme.colors.accentBorder};
-  background: ${({ theme }) => theme.colors.accentGlow};
-  color: ${({ theme }) => theme.colors.accentDim};
-  font-size: 0.76rem;
+export const Heading = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+`;
+
+export const Badge = styled.h2`
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 700;
-  padding: 0.2rem 0.56rem;
+  color: ${({ theme }) => theme.colors.ink};
 `;
 
-export const Counter = styled.span`
-  color: ${({ theme }) => theme.colors.muted};
-  font-size: 0.86rem;
+export const Note = styled.p`
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.inkMuted};
 `;
+
+export const Stats = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+
+  & > :first-child {
+    min-width: 170px;
+  }
+  & > :last-child {
+    min-width: 140px;
+  }
+`;
+
+/** מספרים מהצורה "2 / 5" — נשארים בסדר LTR גם בתוך עברית */
+export const LtrNum = styled.span`
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+`;
+
+/* ───────── לוח ההתאמות ───────── */
 
 export const MatchBoard = styled.div`
   display: grid;
+  /* RTL: העמודה הראשונה (שאלות) בימין, השנייה (תשובות) בשמאל */
   grid-template-columns: 1fr 1fr;
-  gap: 0.9rem;
-  direction: ltr;
+  gap: 40px;
+  align-items: start;
 
-  @media (max-width: 900px) {
+  @media (max-width: 800px) {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 `;
 
-export const Column = styled.div<{ $kind: "questions" | "answers" }>`
-  order: ${({ $kind }) => ($kind === "questions" ? 2 : 1)};
-  border-radius: ${({ theme }) => theme.radius.card};
-  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
-  background: ${({ theme }) => theme.colors.surface};
-  padding: 0.7rem;
+export const Column = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 12px;
   min-width: 0;
-
-  @media (max-width: 900px) {
-    order: initial;
-  }
 `;
 
-export const ColumnTitle = styled.h4`
+export const ColumnTitle = styled.h3`
   margin: 0;
-  font-size: 0.92rem;
-  color: ${({ theme }) => theme.colors.text};
-  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.inkMuted};
+  text-align: right;
 `;
 
 export const List = styled.div`
-  display: grid;
-  gap: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
 export const MatchCard = styled.button<{
@@ -127,46 +135,49 @@ export const MatchCard = styled.button<{
   $dropOver?: boolean;
   $hasImages?: boolean;
 }>`
-  min-height: ${({ $hasImages }) => ($hasImages ? "132px" : "78px")};
-  max-height: ${({ $hasImages }) => ($hasImages ? "132px" : "78px")};
-  border-radius: ${({ theme }) => theme.radius.control};
-  border: 1px solid
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: ${({ $hasImages }) => ($hasImages ? "132px" : "62px")};
+  padding: 18px 20px;
+  box-sizing: border-box;
+  border-radius: ${({ theme }) => theme.radius.answer};
+  border: 1.5px solid
     ${({ theme, $matched, $selected, $dropOver }) =>
       $matched
-        ? "var(--pair-border, " + theme.colors.accent + ")"
-        : $dropOver
-          ? theme.colors.accent
-          : $selected
-          ? theme.colors.accent
-          : theme.colors.borderSubtle};
+        ? theme.colors.successSolid
+        : $selected || $dropOver
+          ? theme.colors.blue
+          : theme.colors.divider};
   background: ${({ theme, $matched, $selected, $dropOver }) =>
     $matched
-      ? "var(--pair-bg, " + theme.colors.accentGlow + ")"
-      : $dropOver
-        ? theme.colors.accentGlow
-        : $selected
-        ? theme.colors.surface
-        : theme.colors.bg};
+      ? theme.colors.successTint
+      : $selected || $dropOver
+        ? theme.colors.blueTint
+        : theme.colors.surface};
   color: ${({ theme, $matched, $selected, $dropOver }) =>
-    $matched
-      ? "var(--pair-text, " + theme.colors.text + ")"
-      : $dropOver || $selected
-        ? theme.colors.text
-        : theme.colors.muted};
+    !$matched && ($selected || $dropOver)
+      ? theme.colors.blue
+      : theme.colors.ink};
   font: inherit;
-  padding: 0.58rem;
+  font-size: 1rem;
+  font-weight: ${({ $matched, $selected }) => ($matched || $selected ? 500 : 400)};
   text-align: right;
   direction: rtl;
   unicode-bidi: plaintext;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.3rem;
   overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
 
   &:disabled {
     cursor: default;
+    opacity: 1;
+  }
+
+  &:not(:disabled):hover {
+    border-color: ${({ theme }) => theme.colors.blue};
   }
 
   &[draggable="true"] {
@@ -176,16 +187,10 @@ export const MatchCard = styled.button<{
   &[draggable="true"]:active {
     cursor: grabbing;
   }
-
-  @media (max-width: 700px) {
-    min-height: ${({ $hasImages }) => ($hasImages ? "120px" : "72px")};
-    max-height: ${({ $hasImages }) => ($hasImages ? "120px" : "72px")};
-  }
 `;
 
 export const CardText = styled.span<{ $clamp?: number }>`
-  font-size: 0.9rem;
-  line-height: 1.42;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: ${({ $clamp }) => $clamp ?? 3};
   -webkit-box-orient: vertical;
@@ -197,47 +202,100 @@ export const CardImage = styled.img`
   width: 100%;
   max-height: 60px;
   object-fit: contain;
-  border-radius: ${({ theme }) => theme.radius.option};
-  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  border-radius: ${({ theme }) => theme.radius.control};
   background: ${({ theme }) => theme.colors.bg};
 `;
 
+/* ───────── הודעות ותוצאה ───────── */
+
 export const WrongHint = styled.p`
   margin: 0;
-  font-size: 0.8rem;
-  color: #b24d5d;
-  text-align: center;
-`;
-
-export const Note = styled.p`
-  margin: 0.65rem 0 0;
-  color: ${({ theme }) => theme.colors.muted};
-  font-size: 0.82rem;
+  font-size: 0.9375rem;
+  color: ${({ theme }) => theme.colors.dangerSolid};
+  text-align: right;
 `;
 
 export const ResultBox = styled.div`
-  border-radius: ${({ theme }) => theme.radius.card};
-  border: 1px solid ${({ theme }) => theme.colors.accentBorder};
-  background: ${({ theme }) => theme.colors.accentGlow};
-  padding: 0.95rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: ${({ theme }) => theme.radius.answer};
+  background: ${({ theme }) => theme.colors.successTint};
+  text-align: right;
 `;
 
 export const ResultTitle = styled.h3`
-  margin: 0 0 0.45rem;
-  font-size: 1.05rem;
-  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.successSolid};
 `;
 
 export const ResultText = styled.p`
   margin: 0;
-  color: ${({ theme }) => theme.colors.muted};
-  font-size: 0.9rem;
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.ink};
 `;
+
+/* ───────── כפתורים תחתונים ───────── */
 
 export const Actions = styled.div`
-  margin-top: 0.85rem;
   display: flex;
-  gap: 0.55rem;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
 `;
 
+const btn = css`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  border-radius: ${({ theme }) => theme.radius.button};
+  font-family: inherit;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: filter 0.12s ease, background 0.12s ease, color 0.12s ease;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+`;
+
+export const PrimaryBtn = styled.button`
+  ${btn}
+  border: 1.5px solid transparent;
+  background: ${({ theme }) => theme.colors.blue};
+  color: ${({ theme }) => theme.colors.white};
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.96);
+  }
+`;
+
+export const SecondaryBtn = styled.button`
+  ${btn}
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1.5px solid ${({ theme }) => theme.colors.blue};
+  color: ${({ theme }) => theme.colors.blue};
+
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.blueTint};
+  }
+`;
+
+export const GhostBtn = styled.button`
+  ${btn}
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.inkMuted};
+
+  &:hover:not(:disabled) {
+    color: ${({ theme }) => theme.colors.ink};
+  }
+`;

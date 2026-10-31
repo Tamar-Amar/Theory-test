@@ -9,8 +9,14 @@ import {
   type AdminTicketRow,
   type AdminUserRow,
 } from "../../api";
+import { PASS_STORY_PREFIX } from "../../constants/stories";
+import { formatShortDate } from "../../utils/formatShortDate";
 import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
+import { FieldInput, FormField } from "../FormField/FormField";
 import { LoadingState } from "../LoadingState/LoadingState";
+import { StatCard } from "../StatCard/StatCard";
+import { Tag } from "../Tag/Tag";
+import { BroadcastPanel } from "./BroadcastPanel";
 import * as S from "./AdminDashboard.styles";
 
 function formatWhen(iso: string | null | undefined) {
@@ -25,37 +31,81 @@ function formatWhen(iso: string | null | undefined) {
   }
 }
 
-type UserSortKey = keyof Pick<
-  AdminUserRow,
-  "username" | "email" | "registeredAt" | "lastLoginAt" | "attemptCount"
->;
-
-function TrashIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M3 6h18" />
-      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
-    </svg>
-  );
+/** תאריך בלבד, למשל "28.10.2026" */
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return formatShortDate(d);
 }
 
+/** "היום, 09:12" / "אתמול" / "28.10.2026" — כמו ב‑Figma */
+function formatLastLogin(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const startOfDay = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dayDiff = Math.round(
+    (startOfDay(new Date()) - startOfDay(d)) / 86_400_000
+  );
+  if (dayDiff === 0) {
+    const hhmm = d.toLocaleTimeString("he-IL", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return `היום, ${hhmm}`;
+  }
+  if (dayDiff === 1) return "אתמול";
+  return formatShortDate(d);
+}
+
+type AdminTab = "users" | "tickets" | "feedback" | "stories" | "broadcast";
+
+/** הסדר כאן הוא הסדר מימין לשמאל (RTL) */
+const TABS: { id: AdminTab; label: string }[] = [
+  { id: "users", label: "משתמשים" },
+  { id: "tickets", label: "פניות" },
+  { id: "feedback", label: "משובים" },
+  { id: "stories", label: "סיפורי הצלחה" },
+  { id: "broadcast", label: "שליחת מייל" },
+];
+
+const SEARCH_LABELS: Record<AdminTab, string> = {
+  users: "חיפוש משתמשים",
+  tickets: "חיפוש פניות",
+  feedback: "חיפוש משובים",
+  stories: "חיפוש סיפורי הצלחה",
+  broadcast: "",
+};
+
+const SEARCH_PLACEHOLDERS: Record<AdminTab, string> = {
+  users: "חיפוש לפי שם משתמש או אימייל…",
+  tickets: "חיפוש לפי משתמש, אימייל או תוכן…",
+  feedback: "חיפוש לפי משתמש, אימייל או משוב…",
+  stories: "חיפוש לפי משתמש, אימייל או תוכן הסיפור…",
+  broadcast: "",
+};
+
+type UserSortKey = keyof Pick<
+  AdminUserRow,
+  | "username"
+  | "email"
+  | "licenseType"
+  | "attemptCount"
+  | "registeredAt"
+  | "lastLoginAt"
+>;
+
+/** הסדר כאן קובע את סדר העמודות (מימין לשמאל) */
 const USER_SORT_LABELS: Record<UserSortKey, string> = {
   username: "שם משתמש",
   email: "אימייל",
+  licenseType: "סוג רישיון",
+  attemptCount: "מבחנים",
   registeredAt: "תאריך הרשמה",
   lastLoginAt: "כניסה אחרונה",
-  attemptCount: "מבחנים שהושלמו",
 };
 
 function compareUsers(
@@ -93,6 +143,13 @@ const TICKET_SORT_LABELS: Record<TicketSortKey, string> = {
   username: "משתמש",
   email: "אימייל",
   body: "תוכן",
+};
+
+const STORY_SORT_LABELS: Record<TicketSortKey, string> = {
+  createdAt: "תאריך",
+  username: "משתמש",
+  email: "אימייל",
+  body: "הסיפור",
 };
 
 function compareTickets(
@@ -162,6 +219,10 @@ function formatAvg(n: number | null | undefined) {
   });
 }
 
+const isStory = (t: AdminTicketRow) => t.body.startsWith(PASS_STORY_PREFIX);
+const storyText = (t: AdminTicketRow) =>
+  t.body.slice(PASS_STORY_PREFIX.length).trim();
+
 function StarsCell({ value }: { value: number }) {
   const filled = Math.min(5, Math.max(0, Math.round(value)));
   return (
@@ -172,10 +233,121 @@ function StarsCell({ value }: { value: number }) {
   );
 }
 
+/** מספר שורות בעמוד בכל טבלאות הניהול */
+const PAGE_SIZE = 10;
+
+/** רשימת מספרי עמודים להצגה: הכול אם מעט, אחרת 1 … סביב הנוכחי … אחרון */
+function pageList(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const wanted = new Set([1, total, current - 1, current, current + 1]);
+  const nums = [...wanted]
+    .filter((n) => n >= 1 && n <= total)
+    .sort((a, b) => a - b);
+  const out: (number | "…")[] = [];
+  nums.forEach((n, i) => {
+    if (i > 0 && n - nums[i - 1] > 1) out.push("…");
+    out.push(n);
+  });
+  return out;
+}
+
+type PageInfo = { current: number; total: number; count: number };
+
+/** מעבר בין דפי הטבלה — מוצג רק כשיש יותר מעמוד אחד */
+function Pager({
+  info,
+  onPage,
+}: {
+  info: PageInfo;
+  onPage: (page: number) => void;
+}) {
+  const { current, total, count } = info;
+  if (count <= PAGE_SIZE) return null;
+  const from = (current - 1) * PAGE_SIZE + 1;
+  const to = Math.min(current * PAGE_SIZE, count);
+  return (
+    <S.Pager aria-label="מעבר בין דפי הטבלה">
+      <S.PagerInfo>
+        מציג {from} עד {to} מתוך {count}
+      </S.PagerInfo>
+      <S.PagerButtons>
+        <S.PageBtn
+          type="button"
+          disabled={current === 1}
+          onClick={() => onPage(current - 1)}
+        >
+          הקודם
+        </S.PageBtn>
+        {pageList(current, total).map((p, i) =>
+          p === "…" ? (
+            <S.PagerGap key={`gap-${i}`} aria-hidden>
+              …
+            </S.PagerGap>
+          ) : (
+            <S.PageBtn
+              key={p}
+              type="button"
+              $active={p === current}
+              aria-current={p === current ? "page" : undefined}
+              onClick={() => onPage(p)}
+            >
+              {p}
+            </S.PageBtn>
+          )
+        )}
+        <S.PageBtn
+          type="button"
+          disabled={current === total}
+          onClick={() => onPage(current + 1)}
+        >
+          הבא
+        </S.PageBtn>
+      </S.PagerButtons>
+    </S.Pager>
+  );
+}
+
+/** תאי כותרת ממוינים לטבלה — מציג חץ כיוון בעמודה הפעילה */
+function SortHead<K extends string>({
+  labels,
+  activeKey,
+  asc,
+  showIndicator,
+  onSort,
+}: {
+  labels: Record<K, string>;
+  activeKey: K;
+  asc: boolean;
+  /** חץ כיוון מוצג רק אחרי שהמשתמש מיין בעצמו (כמו בעיצוב) */
+  showIndicator: boolean;
+  onSort: (key: K) => void;
+}) {
+  return (
+    <>
+      {(Object.keys(labels) as K[]).map((key) => (
+        <S.SortableTh
+          key={key}
+          $active={activeKey === key}
+          onClick={() => onSort(key)}
+          aria-sort={
+            activeKey === key ? (asc ? "ascending" : "descending") : "none"
+          }
+        >
+          {labels[key]}
+          {showIndicator && activeKey === key ? (
+            <S.SortIndicator aria-hidden>{asc ? "↑" : "↓"}</S.SortIndicator>
+          ) : null}
+        </S.SortableTh>
+      ))}
+    </>
+  );
+}
+
 export function AdminDashboard() {
   const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [tab, setTab] = useState<AdminTab>("users");
   const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const [ticketDeleteErr, setTicketDeleteErr] = useState<string | null>(null);
   const [feedbackDeleteErr, setFeedbackDeleteErr] = useState<string | null>(
@@ -190,12 +362,37 @@ export function AdminDashboard() {
   const [userSortKey, setUserSortKey] = useState<UserSortKey>("username");
   const [userSortAsc, setUserSortAsc] = useState(true);
   const [ticketSearch, setTicketSearch] = useState("");
+  const [storySearch, setStorySearch] = useState("");
   const [ticketSortKey, setTicketSortKey] = useState<TicketSortKey>("createdAt");
   const [ticketSortAsc, setTicketSortAsc] = useState(false);
   const [feedbackSearch, setFeedbackSearch] = useState("");
   const [feedbackSortKey, setFeedbackSortKey] =
     useState<FeedbackSortKey>("createdAt");
   const [feedbackSortAsc, setFeedbackSortAsc] = useState(false);
+  const [sortTouched, setSortTouched] = useState({
+    users: false,
+    tickets: false,
+    feedback: false,
+  });
+
+  const [page, setPage] = useState(1);
+
+  // חיפוש, מיון או מעבר טאב — חוזרים לעמוד הראשון
+  useEffect(() => {
+    setPage(1);
+  }, [
+    tab,
+    userSearch,
+    ticketSearch,
+    storySearch,
+    feedbackSearch,
+    userSortKey,
+    userSortAsc,
+    ticketSortKey,
+    ticketSortAsc,
+    feedbackSortKey,
+    feedbackSortAsc,
+  ]);
 
   useEffect(() => {
     setLoading(true);
@@ -229,10 +426,11 @@ export function AdminDashboard() {
   }
 
   async function handleDeleteTicket(t: AdminTicketRow) {
+    const shown = isStory(t) ? storyText(t) : t.body;
     const preview =
-      t.body.length > 80 ? `${t.body.slice(0, 80).trim()}…` : t.body;
+      shown.length > 80 ? `${shown.slice(0, 80).trim()}…` : shown;
     const ok = window.confirm(
-      `למחוק את הפנייה מ"${t.username}"?\n\n"${preview}"\n\nלא ניתן לבטל.`
+      `למחוק את ${isStory(t) ? "הסיפור" : "הפנייה"} מ"${t.username}"?\n\n"${preview}"\n\nלא ניתן לבטל.`
     );
     if (!ok) return;
     setDeletingTicketId(t.id);
@@ -270,6 +468,7 @@ export function AdminDashboard() {
   }
 
   function handleUserSort(key: UserSortKey) {
+    setSortTouched((p) => ({ ...p, users: true }));
     if (userSortKey === key) {
       setUserSortAsc((prev) => !prev);
       return;
@@ -279,6 +478,7 @@ export function AdminDashboard() {
   }
 
   function handleTicketSort(key: TicketSortKey) {
+    setSortTouched((p) => ({ ...p, tickets: true }));
     if (ticketSortKey === key) {
       setTicketSortAsc((prev) => !prev);
       return;
@@ -288,6 +488,7 @@ export function AdminDashboard() {
   }
 
   function handleFeedbackSort(key: FeedbackSortKey) {
+    setSortTouched((p) => ({ ...p, feedback: true }));
     if (feedbackSortKey === key) {
       setFeedbackSortAsc((prev) => !prev);
       return;
@@ -313,23 +514,46 @@ export function AdminDashboard() {
     );
   }, [data, userSearch, userSortKey, userSortAsc]);
 
-  const visibleTickets = useMemo(() => {
-    if (!data) return [];
+  const plainTickets = useMemo(
+    () => (data ? data.tickets.filter((t) => !isStory(t)) : []),
+    [data]
+  );
+  const storyTickets = useMemo(
+    () => (data ? data.tickets.filter(isStory) : []),
+    [data]
+  );
 
+  const visibleTickets = useMemo(() => {
     const q = ticketSearch.trim().toLowerCase();
     const filtered = q
-      ? data.tickets.filter(
+      ? plainTickets.filter(
           (t) =>
             t.username.toLowerCase().includes(q) ||
             t.email.toLowerCase().includes(q) ||
             t.body.toLowerCase().includes(q)
         )
-      : data.tickets;
+      : plainTickets;
 
     return [...filtered].sort((a, b) =>
       compareTickets(a, b, ticketSortKey, ticketSortAsc)
     );
-  }, [data, ticketSearch, ticketSortKey, ticketSortAsc]);
+  }, [plainTickets, ticketSearch, ticketSortKey, ticketSortAsc]);
+
+  const visibleStories = useMemo(() => {
+    const q = storySearch.trim().toLowerCase();
+    const filtered = q
+      ? storyTickets.filter(
+          (t) =>
+            t.username.toLowerCase().includes(q) ||
+            t.email.toLowerCase().includes(q) ||
+            storyText(t).toLowerCase().includes(q)
+        )
+      : storyTickets;
+
+    return [...filtered].sort((a, b) =>
+      compareTickets(a, b, ticketSortKey, ticketSortAsc)
+    );
+  }, [storyTickets, storySearch, ticketSortKey, ticketSortAsc]);
 
   const visibleFeedbacks = useMemo(() => {
     if (!data) return [];
@@ -362,304 +586,333 @@ export function AdminDashboard() {
     return null;
   }
 
-  const withAttempts = data.users.filter((u) => u.attemptCount > 0).length;
-  const approxNoTests = Math.max(0, data.userCount - withAttempts);
+  const paginate = <T,>(items: T[]) => {
+    const total = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    const current = Math.min(page, total);
+    return {
+      rows: items.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE),
+      info: { current, total, count: items.length } as PageInfo,
+    };
+  };
+  const usersPage = paginate(visibleUsers);
+  const ticketsPage = paginate(visibleTickets);
+  const feedbackPage = paginate(visibleFeedbacks);
+  const storiesPage = paginate(visibleStories);
+
+  const emailRecipients = new Set(
+    data.users.map((u) => u.email.trim().toLowerCase()).filter(Boolean)
+  ).size;
+
+  const searchValue =
+    tab === "users"
+      ? userSearch
+      : tab === "tickets"
+        ? ticketSearch
+        : tab === "feedback"
+          ? feedbackSearch
+          : storySearch;
+
+  const onSearch = (value: string) => {
+    if (tab === "users") setUserSearch(value);
+    else if (tab === "tickets") setTicketSearch(value);
+    else if (tab === "feedback") setFeedbackSearch(value);
+    else setStorySearch(value);
+  };
+
+  const tabHasRows =
+    tab === "users"
+      ? data.users.length > 0
+      : tab === "tickets"
+        ? plainTickets.length > 0
+        : tab === "feedback"
+          ? (data.feedbacks ?? []).length > 0
+          : tab === "stories"
+            ? storyTickets.length > 0
+            : false;
 
   return (
     <S.Root>
-      <S.SummaryGrid>
-        <S.StatCard>
-          <S.StatValue>{data.userCount}</S.StatValue>
-          <S.StatLabel>משתמשים רשומים</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{data.totalAttempts}</S.StatValue>
-          <S.StatLabel>מבחנים שהושלמו (סה״כ)</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{data.demoAttempts}</S.StatValue>
-          <S.StatLabel>מבחני ניסיון שהושלמו</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{withAttempts}</S.StatValue>
-          <S.StatLabel>משתמשים עם לפחות מבחן אחד</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{approxNoTests}</S.StatValue>
-          <S.StatLabel>משתמשים בלי מבחנים (הערכה)</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{data.tickets.length}</S.StatValue>
-          <S.StatLabel>פניות אחרונות (עד 200)</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{data.feedbackCount ?? 0}</S.StatValue>
-          <S.StatLabel>משובים שהתקבלו</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{formatAvg(data.avgAppearance)}</S.StatValue>
-          <S.StatLabel>ממוצע נראות</S.StatLabel>
-        </S.StatCard>
-        <S.StatCard>
-          <S.StatValue>{formatAvg(data.avgEfficiency)}</S.StatValue>
-          <S.StatLabel>ממוצע יעילות</S.StatLabel>
-        </S.StatCard>
-      </S.SummaryGrid>
+      <S.TitleRow>
+        <S.Title>לוח ניהול</S.Title>
+        <Tag variant="warm">מנהל מערכת</Tag>
+      </S.TitleRow>
 
-      <div>
-        <S.SectionTitle>משתמשים</S.SectionTitle>
-        {deleteErr ? <ErrorAlert>{deleteErr}</ErrorAlert> : null}
-        {data.users.length === 0 ? (
+      <S.StatsGrid>
+        <StatCard
+          value={data.userCount.toLocaleString("he-IL")}
+          label="משתמשים רשומים"
+        />
+        <StatCard
+          value={data.demoAttempts.toLocaleString("he-IL")}
+          label="מבחני ניסיון שהושלמו"
+        />
+        <StatCard
+          value={formatAvg(data.avgEfficiency)}
+          label="דירוג יעילות ממוצע"
+        />
+        <StatCard value={plainTickets.length} label="פניות פתוחות" />
+      </S.StatsGrid>
+
+      <S.Tabs role="tablist" aria-label="אזורי ניהול">
+        {TABS.map((t) => (
+          <S.Tab
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            $active={tab === t.id}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </S.Tab>
+        ))}
+      </S.Tabs>
+
+      {tab === "users" && deleteErr ? <ErrorAlert>{deleteErr}</ErrorAlert> : null}
+      {(tab === "tickets" || tab === "stories") && ticketDeleteErr ? (
+        <ErrorAlert>{ticketDeleteErr}</ErrorAlert>
+      ) : null}
+      {tab === "feedback" && feedbackDeleteErr ? (
+        <ErrorAlert>{feedbackDeleteErr}</ErrorAlert>
+      ) : null}
+
+      {tabHasRows ? (
+        <S.SearchBlock>
+          <FormField id="admin-search" label={SEARCH_LABELS[tab]}>
+            <FieldInput
+              id="admin-search"
+              type="search"
+              value={searchValue}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder={SEARCH_PLACEHOLDERS[tab]}
+              aria-label={SEARCH_LABELS[tab]}
+            />
+          </FormField>
+        </S.SearchBlock>
+      ) : null}
+
+      {tab === "users" &&
+        (data.users.length === 0 ? (
           <S.Empty>אין משתמשים רשומים במערכת.</S.Empty>
+        ) : visibleUsers.length === 0 ? (
+          <S.Empty>לא נמצאו משתמשים התואמים לחיפוש.</S.Empty>
         ) : (
-          <>
-            <S.UsersToolbar>
-              <S.SearchInput
-                type="search"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="חיפוש לפי שם משתמש או אימייל…"
-                aria-label="חיפוש משתמשים לפי שם או אימייל"
-              />
-            </S.UsersToolbar>
-            {visibleUsers.length === 0 ? (
-              <S.Empty>לא נמצאו משתמשים התואמים לחיפוש.</S.Empty>
-            ) : (
-              <S.ScrollableTableWrap>
-                <S.Table>
-                  <thead>
-                    <tr>
-                      {(Object.keys(USER_SORT_LABELS) as UserSortKey[]).map(
-                        (key) => (
-                          <S.SortableTh
-                            key={key}
-                            $active={userSortKey === key}
-                            onClick={() => handleUserSort(key)}
-                            aria-sort={
-                              userSortKey === key
-                                ? userSortAsc
-                                  ? "ascending"
-                                  : "descending"
-                                : "none"
-                            }
-                          >
-                            {USER_SORT_LABELS[key]}
-                            {userSortKey === key ? (
-                              <S.SortIndicator aria-hidden>
-                                {userSortAsc ? "↑" : "↓"}
-                              </S.SortIndicator>
-                            ) : null}
-                          </S.SortableTh>
-                        )
-                      )}
-                      <S.ThActions>פעולות</S.ThActions>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleUsers.map((u) => (
-                      <S.Tr key={u.userId}>
-                        <S.Td>{u.username}</S.Td>
-                        <S.Td>{u.email || "-"}</S.Td>
-                        <S.TdDate>{formatWhen(u.registeredAt)}</S.TdDate>
-                        <S.TdDate>{formatWhen(u.lastLoginAt)}</S.TdDate>
-                        <S.Td>{u.attemptCount}</S.Td>
-                        <S.TdActions>
-                          <S.DeleteButton
-                            type="button"
-                            disabled={deletingId !== null}
-                            onClick={() => handleDeleteUser(u)}
-                            aria-label={
-                              deletingId === u.userId
-                                ? "מוחק משתמש"
-                                : `מחק משתמש ${u.username}`
-                            }
-                            title="מחק משתמש"
-                          >
-                            <TrashIcon />
-                          </S.DeleteButton>
-                        </S.TdActions>
-                      </S.Tr>
-                    ))}
-                  </tbody>
-                </S.Table>
-              </S.ScrollableTableWrap>
-            )}
-          </>
-        )}
-      </div>
+          <S.TableCard>
+            <S.TableScroll>
+            <S.Table>
+              <thead>
+                <tr>
+                  <SortHead
+                    labels={USER_SORT_LABELS}
+                    activeKey={userSortKey}
+                    asc={userSortAsc}
+                    showIndicator={sortTouched.users}
+                    onSort={handleUserSort}
+                  />
+                  <S.Th aria-label="פעולות" />
+                </tr>
+              </thead>
+              <tbody>
+                {usersPage.rows.map((u) => (
+                  <S.Tr key={u.userId}>
+                    <S.Td>{u.username}</S.Td>
+                    <S.Td>{u.email || "-"}</S.Td>
+                    <S.Td>{u.licenseType || "-"}</S.Td>
+                    <S.TdNum>{u.attemptCount}</S.TdNum>
+                    <S.Td>{formatDate(u.registeredAt)}</S.Td>
+                    <S.Td>{formatLastLogin(u.lastLoginAt)}</S.Td>
+                    <S.Td>
+                      <S.DeleteButton
+                        type="button"
+                        disabled={deletingId !== null}
+                        onClick={() => handleDeleteUser(u)}
+                        aria-label={
+                          deletingId === u.userId
+                            ? "מוחק משתמש"
+                            : `מחק משתמש ${u.username}`
+                        }
+                      >
+                        מחיקה
+                      </S.DeleteButton>
+                    </S.Td>
+                  </S.Tr>
+                ))}
+              </tbody>
+            </S.Table>
+            </S.TableScroll>
+            <Pager info={usersPage.info} onPage={setPage} />
+          </S.TableCard>
+        ))}
 
-      <div>
-        <S.SectionTitle>פניות מהמשתמשים</S.SectionTitle>
-        {ticketDeleteErr ? <ErrorAlert>{ticketDeleteErr}</ErrorAlert> : null}
-        {data.tickets.length === 0 ? (
+      {tab === "tickets" &&
+        (plainTickets.length === 0 ? (
           <S.Empty>אין פניות עדיין.</S.Empty>
+        ) : visibleTickets.length === 0 ? (
+          <S.Empty>לא נמצאו פניות התואמות לחיפוש.</S.Empty>
         ) : (
-          <>
-            <S.UsersToolbar>
-              <S.SearchInput
-                type="search"
-                value={ticketSearch}
-                onChange={(e) => setTicketSearch(e.target.value)}
-                placeholder="חיפוש לפי משתמש, אימייל או תוכן…"
-                aria-label="חיפוש פניות לפי משתמש, אימייל או תוכן"
-              />
-            </S.UsersToolbar>
-            {visibleTickets.length === 0 ? (
-              <S.Empty>לא נמצאו פניות התואמות לחיפוש.</S.Empty>
-            ) : (
-              <S.ScrollableTableWrap>
-                <S.Table>
-                  <thead>
-                    <tr>
-                      {(Object.keys(TICKET_SORT_LABELS) as TicketSortKey[]).map(
-                        (key) => (
-                          <S.SortableTh
-                            key={key}
-                            $active={ticketSortKey === key}
-                            onClick={() => handleTicketSort(key)}
-                            aria-sort={
-                              ticketSortKey === key
-                                ? ticketSortAsc
-                                  ? "ascending"
-                                  : "descending"
-                                : "none"
-                            }
-                          >
-                            {TICKET_SORT_LABELS[key]}
-                            {ticketSortKey === key ? (
-                              <S.SortIndicator aria-hidden>
-                                {ticketSortAsc ? "↑" : "↓"}
-                              </S.SortIndicator>
-                            ) : null}
-                          </S.SortableTh>
-                        )
-                      )}
-                      <S.ThActions>פעולות</S.ThActions>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleTickets.map((t) => (
-                      <S.Tr key={t.id}>
-                        <S.TdDate>{formatWhen(t.createdAt)}</S.TdDate>
-                        <S.Td>{t.username}</S.Td>
-                        <S.Td>{t.email || "-"}</S.Td>
-                        <S.Td>
-                          <S.TicketBody>{t.body}</S.TicketBody>
-                        </S.Td>
-                        <S.TdActions>
-                          <S.DeleteButton
-                            type="button"
-                            disabled={deletingTicketId !== null}
-                            onClick={() => handleDeleteTicket(t)}
-                            aria-label={
-                              deletingTicketId === t.id
-                                ? "מוחק פנייה"
-                                : `מחק פנייה מ${t.username}`
-                            }
-                            title="מחק פנייה"
-                          >
-                            <TrashIcon />
-                          </S.DeleteButton>
-                        </S.TdActions>
-                      </S.Tr>
-                    ))}
-                  </tbody>
-                </S.Table>
-              </S.ScrollableTableWrap>
-            )}
-          </>
-        )}
-      </div>
+          <S.TableCard>
+            <S.TableScroll>
+            <S.Table>
+              <thead>
+                <tr>
+                  <SortHead
+                    labels={TICKET_SORT_LABELS}
+                    activeKey={ticketSortKey}
+                    asc={ticketSortAsc}
+                    showIndicator={sortTouched.tickets}
+                    onSort={handleTicketSort}
+                  />
+                  <S.Th aria-label="פעולות" />
+                </tr>
+              </thead>
+              <tbody>
+                {ticketsPage.rows.map((t) => (
+                  <S.Tr key={t.id}>
+                    <S.Td>{formatWhen(t.createdAt)}</S.Td>
+                    <S.Td>{t.username}</S.Td>
+                    <S.Td>{t.email || "-"}</S.Td>
+                    <S.Td>
+                      <S.TicketBody>{t.body}</S.TicketBody>
+                    </S.Td>
+                    <S.Td>
+                      <S.DeleteButton
+                        type="button"
+                        disabled={deletingTicketId !== null}
+                        onClick={() => handleDeleteTicket(t)}
+                        aria-label={
+                          deletingTicketId === t.id
+                            ? "מוחק פנייה"
+                            : `מחק פנייה מ${t.username}`
+                        }
+                      >
+                        מחיקה
+                      </S.DeleteButton>
+                    </S.Td>
+                  </S.Tr>
+                ))}
+              </tbody>
+            </S.Table>
+            </S.TableScroll>
+            <Pager info={ticketsPage.info} onPage={setPage} />
+          </S.TableCard>
+        ))}
 
-      <div>
-        <S.SectionTitle>משוב משתמשים</S.SectionTitle>
-        {feedbackDeleteErr ? <ErrorAlert>{feedbackDeleteErr}</ErrorAlert> : null}
-        {(data.feedbacks ?? []).length === 0 ? (
+      {tab === "feedback" &&
+        ((data.feedbacks ?? []).length === 0 ? (
           <S.Empty>אין משובים עדיין.</S.Empty>
+        ) : visibleFeedbacks.length === 0 ? (
+          <S.Empty>לא נמצאו משובים התואמים לחיפוש.</S.Empty>
         ) : (
-          <>
-            <S.UsersToolbar>
-              <S.SearchInput
-                type="search"
-                value={feedbackSearch}
-                onChange={(e) => setFeedbackSearch(e.target.value)}
-                placeholder="חיפוש לפי משתמש, אימייל או משוב…"
-                aria-label="חיפוש משובים לפי משתמש, אימייל או תוכן"
-              />
-            </S.UsersToolbar>
-            {visibleFeedbacks.length === 0 ? (
-              <S.Empty>לא נמצאו משובים התואמים לחיפוש.</S.Empty>
-            ) : (
-              <S.ScrollableTableWrap>
-                <S.Table>
-                  <thead>
-                    <tr>
-                      {(
-                        Object.keys(FEEDBACK_SORT_LABELS) as FeedbackSortKey[]
-                      ).map((key) => (
-                        <S.SortableTh
-                          key={key}
-                          $active={feedbackSortKey === key}
-                          onClick={() => handleFeedbackSort(key)}
-                          aria-sort={
-                            feedbackSortKey === key
-                              ? feedbackSortAsc
-                                ? "ascending"
-                                : "descending"
-                              : "none"
-                          }
-                        >
-                          {FEEDBACK_SORT_LABELS[key]}
-                          {feedbackSortKey === key ? (
-                            <S.SortIndicator aria-hidden>
-                              {feedbackSortAsc ? "↑" : "↓"}
-                            </S.SortIndicator>
-                          ) : null}
-                        </S.SortableTh>
-                      ))}
-                      <S.ThActions>פעולות</S.ThActions>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleFeedbacks.map((f) => (
-                      <S.Tr key={f.id}>
-                        <S.TdDate>{formatWhen(f.createdAt)}</S.TdDate>
-                        <S.Td>{f.username}</S.Td>
-                        <S.Td>
-                          <StarsCell value={f.appearanceRating} />
-                        </S.Td>
-                        <S.Td>
-                          <StarsCell value={f.efficiencyRating} />
-                        </S.Td>
-                        <S.Td>
-                          <S.TicketBody>
-                            {f.comment.trim() ? f.comment : "—"}
-                          </S.TicketBody>
-                        </S.Td>
-                        <S.TdActions>
-                          <S.DeleteButton
-                            type="button"
-                            disabled={deletingFeedbackId !== null}
-                            onClick={() => handleDeleteFeedback(f)}
-                            aria-label={
-                              deletingFeedbackId === f.id
-                                ? "מוחק משוב"
-                                : `מחק משוב מ${f.username}`
-                            }
-                            title="מחק משוב"
-                          >
-                            <TrashIcon />
-                          </S.DeleteButton>
-                        </S.TdActions>
-                      </S.Tr>
-                    ))}
-                  </tbody>
-                </S.Table>
-              </S.ScrollableTableWrap>
-            )}
-          </>
-        )}
-      </div>
+          <S.TableCard>
+            <S.TableScroll>
+            <S.Table>
+              <thead>
+                <tr>
+                  <SortHead
+                    labels={FEEDBACK_SORT_LABELS}
+                    activeKey={feedbackSortKey}
+                    asc={feedbackSortAsc}
+                    showIndicator={sortTouched.feedback}
+                    onSort={handleFeedbackSort}
+                  />
+                  <S.Th aria-label="פעולות" />
+                </tr>
+              </thead>
+              <tbody>
+                {feedbackPage.rows.map((f) => (
+                  <S.Tr key={f.id}>
+                    <S.Td>{formatWhen(f.createdAt)}</S.Td>
+                    <S.Td>{f.username}</S.Td>
+                    <S.Td>
+                      <StarsCell value={f.appearanceRating} />
+                    </S.Td>
+                    <S.Td>
+                      <StarsCell value={f.efficiencyRating} />
+                    </S.Td>
+                    <S.Td>
+                      <S.TicketBody>
+                        {f.comment.trim() ? f.comment : "—"}
+                      </S.TicketBody>
+                    </S.Td>
+                    <S.Td>
+                      <S.DeleteButton
+                        type="button"
+                        disabled={deletingFeedbackId !== null}
+                        onClick={() => handleDeleteFeedback(f)}
+                        aria-label={
+                          deletingFeedbackId === f.id
+                            ? "מוחק משוב"
+                            : `מחק משוב מ${f.username}`
+                        }
+                      >
+                        מחיקה
+                      </S.DeleteButton>
+                    </S.Td>
+                  </S.Tr>
+                ))}
+              </tbody>
+            </S.Table>
+            </S.TableScroll>
+            <Pager info={feedbackPage.info} onPage={setPage} />
+          </S.TableCard>
+        ))}
+
+      {tab === "broadcast" && (
+        <BroadcastPanel recipientCount={emailRecipients} />
+      )}
+
+      {tab === "stories" &&
+        (storyTickets.length === 0 ? (
+          <S.Empty>אין סיפורי הצלחה עדיין.</S.Empty>
+        ) : visibleStories.length === 0 ? (
+          <S.Empty>לא נמצאו סיפורי הצלחה התואמים לחיפוש.</S.Empty>
+        ) : (
+          <S.TableCard>
+            <S.TableScroll>
+            <S.Table>
+              <thead>
+                <tr>
+                  <SortHead
+                    labels={STORY_SORT_LABELS}
+                    activeKey={ticketSortKey}
+                    asc={ticketSortAsc}
+                    showIndicator={sortTouched.tickets}
+                    onSort={handleTicketSort}
+                  />
+                  <S.Th aria-label="פעולות" />
+                </tr>
+              </thead>
+              <tbody>
+                {storiesPage.rows.map((t) => (
+                  <S.Tr key={t.id}>
+                    <S.Td>{formatWhen(t.createdAt)}</S.Td>
+                    <S.Td>{t.username}</S.Td>
+                    <S.Td>{t.email || "-"}</S.Td>
+                    <S.Td>
+                      <S.TicketBody>{storyText(t)}</S.TicketBody>
+                    </S.Td>
+                    <S.Td>
+                      <S.DeleteButton
+                        type="button"
+                        disabled={deletingTicketId !== null}
+                        onClick={() => handleDeleteTicket(t)}
+                        aria-label={
+                          deletingTicketId === t.id
+                            ? "מוחק סיפור"
+                            : `מחק סיפור מ${t.username}`
+                        }
+                      >
+                        מחיקה
+                      </S.DeleteButton>
+                    </S.Td>
+                  </S.Tr>
+                ))}
+              </tbody>
+            </S.Table>
+            </S.TableScroll>
+            <Pager info={storiesPage.info} onPage={setPage} />
+          </S.TableCard>
+        ))}
     </S.Root>
   );
 }

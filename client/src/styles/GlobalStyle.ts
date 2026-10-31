@@ -7,6 +7,17 @@ export const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
 
+  /* גובה הכותרת הקבועה — נמוך וקומפקטי: 68px בדסקטופ, 56px במובייל */
+  :root {
+    --header-h: 4.25rem;
+  }
+
+  @media (max-width: 899px) {
+    :root {
+      --header-h: 3.5rem;
+    }
+  }
+
   html {
     font-size: 100%;
   }

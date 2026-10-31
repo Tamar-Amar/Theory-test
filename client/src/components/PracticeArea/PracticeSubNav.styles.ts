@@ -1,43 +1,52 @@
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 
+export const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+`;
+
+export const Title = styled.h1`
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.colors.ink};
+  text-align: right;
+`;
+
 export const SubNav = styled.nav`
   display: flex;
-  gap: 0.35rem;
+  gap: 1.75rem;
   width: 100%;
-  max-width: 760px;
-  margin-inline: auto;
-  margin-bottom: 1.15rem;
+  justify-content: flex-start;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
 `;
 
 export const SubNavLink = styled(NavLink)`
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 0.6rem 0.5rem;
-  border: 1px solid ${({ theme }) => theme.colors.surface2};
-  border-radius: ${({ theme }) => theme.radius.control};
-  background: ${({ theme }) => theme.colors.bg};
-  color: ${({ theme }) => theme.colors.muted};
+  padding: 0.5rem 0.15rem 0.75rem;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: ${({ theme }) => theme.colors.inkMuted};
   font-family: inherit;
-  font-weight: 600;
-  font-size: 0.88rem;
+  font-weight: 500;
+  font-size: 1rem;
   text-decoration: none;
-  text-align: center;
-  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+  transition: color 0.12s ease, border-color 0.12s ease;
 
   &[aria-current="page"] {
-    border-color: ${({ theme }) => theme.colors.accent};
-    background: ${({ theme }) => theme.colors.accentGlow};
-    color: ${({ theme }) => theme.colors.accentDim};
+    color: ${({ theme }) => theme.colors.blue};
+    border-bottom-color: ${({ theme }) => theme.colors.blue};
+    font-weight: 600;
   }
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.accentBorder};
-    color: ${({ theme }) => theme.colors.text};
-  }
-
-  @media (max-width: 480px) {
-    font-size: 0.78rem;
-    padding: 0.55rem 0.35rem;
+    color: ${({ theme }) => theme.colors.ink};
   }
 `;

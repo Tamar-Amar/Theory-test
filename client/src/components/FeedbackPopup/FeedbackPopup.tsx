@@ -2,8 +2,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { dismissUxFeedback, submitUxFeedback } from "../../api";
 import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
 import { FormField } from "../FormField/FormField";
-import * as FF from "../FormField/FormField.styles";
-import { PrimaryButton } from "../Button/Button";
 import * as S from "./FeedbackPopup.styles";
 
 type Props = {
@@ -20,10 +18,10 @@ const STAR_LABELS = [
 
 function StarIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden focusable="false">
+    <svg viewBox="0 0 30 30" aria-hidden focusable="false">
       <path
         fill="currentColor"
-        d="M12 2.6 14.7 8.3l6.3.9-4.5 4.4 1.1 6.2L12 16.9 6.4 19.8l1.1-6.2-4.5-4.4 6.3-.9L12 2.6z"
+        d="M15 3.125L18.625 10.625L26.875 11.75L20.875 17.5L22.375 25.625L15 21.75L7.625 25.625L9.125 17.5L3.125 11.75L11.375 10.625L15 3.125Z"
       />
     </svg>
   );
@@ -38,15 +36,16 @@ function StarRating({
   value: number;
   onChange: (n: number) => void;
 }) {
+  const labelId = useId();
   const [hover, setHover] = useState(0);
   const shown = hover || value;
 
   return (
-    <S.RatingBlock>
-      <S.RatingLegend>{label}</S.RatingLegend>
+    <S.RatingRow>
+      <S.RatingLabel id={labelId}>{label}</S.RatingLabel>
       <S.Stars
         role="radiogroup"
-        aria-label={label}
+        aria-labelledby={labelId}
         onMouseLeave={() => setHover(0)}
       >
         {[1, 2, 3, 4, 5].map((n) => (
@@ -64,7 +63,7 @@ function StarRating({
           </S.StarButton>
         ))}
       </S.Stars>
-    </S.RatingBlock>
+    </S.RatingRow>
   );
 }
 
@@ -180,6 +179,7 @@ export function FeedbackPopup({ onDone }: Props) {
           ✕
         </S.Close>
 
+        <S.Badge aria-hidden>⭐</S.Badge>
         {thanks ? (
           <S.Thanks id={titleId}>תודה על המשוב!</S.Thanks>
         ) : (
@@ -200,31 +200,31 @@ export function FeedbackPopup({ onDone }: Props) {
               value={efficiency}
               onChange={setEfficiency}
             />
-            <S.CommentWrap>
+            <S.FieldWrap>
               <FormField id="ux-feedback-comment" label="משוב חופשי (אופציונלי)">
-                <FF.Input
+                <S.TextArea
                   as="textarea"
+                  $height={110}
                   id="ux-feedback-comment"
                   data-multiline="true"
-                  rows={4}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={2000}
                   placeholder="מה עבד טוב? מה כדאי לשפר?"
                 />
               </FormField>
-            </S.CommentWrap>
+            </S.FieldWrap>
             <S.Actions>
-              <PrimaryButton type="button" disabled={busy} onClick={submit}>
+              <S.PrimaryBtn type="button" disabled={busy} onClick={submit}>
                 {busy ? "שולח…" : "שליחת משוב"}
-              </PrimaryButton>
-              <S.Skip
+              </S.PrimaryBtn>
+              <S.GhostBtn
                 type="button"
                 disabled={busy}
                 onClick={() => void closeAndDismiss()}
               >
                 לא עכשיו
-              </S.Skip>
+              </S.GhostBtn>
             </S.Actions>
           </>
         )}

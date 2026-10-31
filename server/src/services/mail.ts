@@ -120,3 +120,82 @@ export async function sendUxFeedbackCopyEmail(opts: {
     html,
   });
 }
+
+export type BroadcastDelivery = "sent" | "logged";
+
+/** כמה מיילים נשלחים במקביל — מתון כדי לא לחרוג ממגבלות ספק ה‑SMTP */
+const BROADCAST_CONCURRENCY = 5;
+
+/**
+ * שליחת הודעה זהה לרשימת נמענים — מייל נפרד לכל נמען (בלי חשיפת כתובות
+ * של משתמשים אחרים). אם SMTP לא מוגדר, ההודעה נרשמת ביומן בלבד ו‑delivery="logged".
+ */
+export async function sendBroadcastEmail(opts: {
+  recipients: string[];
+  subject: string;
+  body: string;
+  onProgress?: (counts: { sent: number; failed: number }) => void;
+}): Promise<{ delivery: BroadcastDelivery; sent: number; failed: number }> {
+  const footer = "נשלח מהאתר תרגול תאוריה.";
+  const text = `${opts.body}\n\n—\n${footer}`;
+  const html = `
+    <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.7">
+      <div style="white-space:pre-wrap">${escapeHtml(opts.body)}</div>
+      <hr style="border:none;border-top:1px solid #ebe8e1;margin:20px 0">
+      <p style="color:#5b6070;font-size:13px;margin:0">${footer}</p>
+    </div>
+  `;
+
+  const smtp = getSmtpConfig();
+  if (!smtp) {
+    console.info(
+      `[mail] SMTP לא מוגדר — הודעה לכולם (${opts.recipients.length} נמענים) לא נשלחה:\n${opts.subject}\n${opts.body}`
+    );
+    return { delivery: "logged", sent: 0, failed: 0 };
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    auth: { user: smtp.user, pass: smtp.pass },
+    pool: true,
+    maxConnections: BROADCAST_CONCURRENCY,
+  });
+
+  let sent = 0;
+  let failed = 0;
+  const queue = [...opts.recipients];
+
+  const worker = async () => {
+    for (let to = queue.shift(); to !== undefined; to = queue.shift()) {
+      try {
+        await transporter.sendMail({
+          from: smtp.from,
+          to,
+          subject: opts.subject,
+          text,
+          html,
+        });
+        sent += 1;
+      } catch (e) {
+        failed += 1;
+        console.error(`[mail] שליחה נכשלה אל ${to}:`, e);
+      }
+      opts.onProgress?.({ sent, failed });
+    }
+  };
+
+  try {
+    await Promise.all(
+      Array.from(
+        { length: Math.min(BROADCAST_CONCURRENCY, opts.recipients.length) },
+        worker
+      )
+    );
+  } finally {
+    transporter.close();
+  }
+
+  return { delivery: "sent", sent, failed };
+}

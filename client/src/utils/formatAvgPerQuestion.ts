@@ -1,7 +1,7 @@
 /** תצוגת ממוצע זמן לשאלה (מילישניות) */
 export function formatAvgMsPerQuestion(ms: number) {
   const sec = ms / 1000;
-  if (sec < 60) return `${sec.toFixed(1)} שנ׳`;
+  if (sec < 60) return `${Math.round(sec)} שנ׳`;
   const s = Math.floor(sec);
   const m = Math.floor(s / 60);
   const r = s % 60;

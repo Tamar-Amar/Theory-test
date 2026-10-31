@@ -1,21 +1,35 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Ring, Triangle, TrafficLight, RoadCurve } from "../Deco/Deco";
+import { StatCard } from "../StatCard/StatCard";
+import { NarrowOnly, WideOnly } from "../Responsive/Responsive";
+import { Tag } from "../Tag/Tag";
 import { DemoQuiz } from "./DemoQuiz";
-import { DEMO_QUESTIONS } from "./demoQuestions";
 import * as S from "./LandingPage.styles";
 
-const FAQ: { q: string; a: string }[] = [
+/** מקטעי "למה לתרגל כאן?" — בסדר התצוגה משמאל לימין כמו ב‑Figma */
+const FEATURES = [
+  {
+    title: "מצב למידה לפי נושאים",
+    text: "לומדים את התשובה הנכונה לפני המשחק, ובודקים אם הפנמתם.",
+  },
+  {
+    title: "מעקב התקדמות אישי",
+    text: "רואים בכל רגע את אחוז ההצלחה, זמן ממוצע לשאלה, והנושאים שדורשים חיזוק.",
+  },
+  {
+    title: "מיקוד על הטעויות שלכם",
+    text: "המערכת זוכרת על אילו שאלות טעיתם, כמה פעמים ומתי, ומחזירה אותן עד שתשלטו בהן.",
+  },
+];
+
+const FAQ = [
   {
     q: "כמה שאלות יש במבחן התאוריה האמיתי?",
-    a: "מבחן התאוריה כולל 30 שאלות אמריקאיות, וכדי לעבור צריך לענות נכון על לפחות 26 מהן (90%). התרגול כאן בנוי באותו פורמט כדי להרגיל אתכם לבחינה.",
+    a: "מבחן התאוריה כולל 30 שאלות אמריקאיות, וכדי לעבור צריך לענות נכון על לפחות 26 מהן (90%).",
   },
   {
     q: "האם התרגול חינמי?",
-    a: "כן. אפשר לתרגל כאן בלי לשלם. מבחן הניסיון בעמוד זה פתוח לכולם ללא הרשמה, וההרשמה החינמית מוסיפה שמירת התקדמות ושאלות שממוקדות בטעויות שלכם.",
-  },
-  {
-    q: "מה זה תרגול ממוקד טעויות?",
-    a: "המערכת זוכרת על אילו שאלות טעיתם, כמה פעמים, ומתי, ומחזירה אותן אליכם בתדירות גבוהה יותר עד שתשלטו בהן - כך אתם לא מבזבזים זמן על מה שכבר ידוע לכם.",
+    a: "כן. מבחן הניסיון פתוח לכולם ללא הרשמה, וההרשמה החינמית מוסיפה שמירת התקדמות.",
   },
   {
     q: "האם צריך להוריד אפליקציה?",
@@ -23,99 +37,134 @@ const FAQ: { q: string; a: string }[] = [
   },
 ];
 
-export function LandingPage() {
-  const [demoOpen, setDemoOpen] = useState(false);
+function scrollToDemo() {
+  document
+    .getElementById("demo")
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
+export function LandingPage() {
   useEffect(() => {
-    document.title =
-      "תרגול מבחני תאוריה - מבחן מדומה חינם וממוקד טעויות";
+    document.title = "תרגול מבחני תאוריה - מבחן מדומה חינם וממוקד טעויות";
   }, []);
 
   return (
     <>
-      <S.Hero>
-        <S.Title>תרגול מבחני תאוריה - חינם וממוקד טעויות</S.Title>
-        <S.Lead>
-          מבחני תאוריה מדומים בפורמט הבחינה האמיתית, שאלות לפי נושאים, ומערכת חכמה
-          שמזהה את הטעויות שלכם ומחזירה אותן עד שתשלטו בחומר. התחילו לתרגל עכשיו -
-          בלי הרשמה.
-        </S.Lead>
-        <S.CtaRow>
-          <S.CtaPrimary to="/login" $pulse>
-            הרשמה חינם לגישה מלאה ושמירת התקדמות
-          </S.CtaPrimary>
-          <S.CtaGhost href="#demo">נסו מבחן ניסיון</S.CtaGhost>
-        </S.CtaRow>
-        <S.SocialLine>
-          הצטרפו ל<S.SocialEmphasis>מאות לומדים</S.SocialEmphasis> שכבר תרגלו כאן{" "}
-          <S.SocialEmphasis>אלפי מבחנים</S.SocialEmphasis>
-        </S.SocialLine>
-      </S.Hero>
+      {/* ===== Hero ===== */}
+      <S.HeroSection>
+        <S.HeroDeco aria-hidden>
+          <Ring style={{ top: "80px", left: "9%", opacity: 0.14 }} width={92} height={92} />
+          <TrafficLight style={{ top: "70px", right: "9%", opacity: 0.55 }} width={40} height={106} />
+          <Triangle style={{ top: "310px", left: "17%", opacity: 0.16 }} width={70} height={61} />
+          <RoadCurve
+            style={{ top: "280px", left: "50%", transform: "translateX(-55%)", opacity: 0.26 }}
+            width={820}
+            height={205}
+          />
+        </S.HeroDeco>
 
-      <S.Section>
-        <S.SectionTitle>למה לתרגל כאן?</S.SectionTitle>
-        <S.Features>
-          <S.Feature>
-            <S.FeatureIcon aria-hidden>🎯</S.FeatureIcon>
-            <S.FeatureTitle>מיקוד על הטעויות שלכם</S.FeatureTitle>
-            <S.FeatureText>
-              לא עוד שאלות אקראיות בלבד - המערכת מחזירה את השאלות שטעיתם בהן עד
-              שתדעו אותן בביטחון.
-            </S.FeatureText>
-          </S.Feature>
-          <S.Feature>
-            <S.FeatureIcon aria-hidden>📊</S.FeatureIcon>
-            <S.FeatureTitle>מעקב התקדמות אישי</S.FeatureTitle>
-            <S.FeatureText>
-              רואים בכל רגע את אחוז ההצלחה, זמן ממוצע לשאלה, והנושאים שדורשים
-              חיזוק.
-            </S.FeatureText>
-          </S.Feature>
-          <S.Feature>
-            <S.FeatureIcon aria-hidden>📚</S.FeatureIcon>
-            <S.FeatureTitle>מצב למידה לפי נושאים</S.FeatureTitle>
-            <S.FeatureText>
-              תרגול ממוקד נושא עם תשובות נכונות והסברים, בנוסף למבחנים מדומים
-              מלאים.
-            </S.FeatureText>
-          </S.Feature>
-        </S.Features>
-      </S.Section>
+        <S.HeroInner>
+          <S.HeroContent>
+            <Tag variant="warm">
+              חינם · בלי הרשמה<WideOnly> למבחן ניסיון</WideOnly>
+            </Tag>
+            <S.Title>
+              לומדים תאוריה <span>ברוגע</span>,<br />
+              ועוברים בביטחון.
+            </S.Title>
+            <S.Lead>
+              מבחני תאוריה מדומים בפורמט הבחינה האמיתית, שאלות לפי נושאים, ומערכת
+              חכמה שמזהה את הטעויות שלכם ומחזירה אותן עד שתשלטו בחומר.
+            </S.Lead>
+            <S.HeroActions>
+              <S.HeroSecondary to="/login">הרשמה חינם</S.HeroSecondary>
+              <S.HeroPrimary type="button" onClick={scrollToDemo}>
+                התחילו מבחן ניסיון
+              </S.HeroPrimary>
+            </S.HeroActions>
+            <S.Stats>
+              <StatCard
+                value="6"
+                label={
+                  <>
+                    <WideOnly>סוגי רישיון</WideOnly>
+                    <NarrowOnly>רישיונות</NarrowOnly>
+                  </>
+                }
+              />
+              <StatCard
+                value="26"
+                label={
+                  <>
+                    <WideOnly>תשובות נכונות </WideOnly>למעבר
+                  </>
+                }
+              />
+              <StatCard
+                value="30"
+                label={
+                  <>
+                    שאלות<WideOnly> במבחן</WideOnly>
+                  </>
+                }
+              />
+            </S.Stats>
+          </S.HeroContent>
+        </S.HeroInner>
+      </S.HeroSection>
 
-      <S.Section id="demo">
-        <S.SectionTitle>מבחן ניסיון - בלי הרשמה</S.SectionTitle>
-        <S.SectionIntro>
-          {DEMO_QUESTIONS.length} שאלות אמיתיות בפורמט הבחינה. ענו, קבלו ציון
-          והסבר על כל שאלה - בדיוק כמו בתרגול המלא.
-        </S.SectionIntro>
-        <S.DemoLaunch>
-          <S.DemoLaunchTitle>מוכנים לבדוק את עצמכם?</S.DemoLaunchTitle>
-          <S.DemoLaunchText>
+      {/* ===== מבחן ניסיון ===== */}
+      <S.DemoSection id="demo">
+        <S.DemoInner>
+          <S.SectionTitle>מבחן ניסיון - בלי הרשמה</S.SectionTitle>
+          <S.SectionSub>
             מבחן ניסיון קצר שייתן לכם טעימה מהמערכת. לוקח פחות מדקה.
-          </S.DemoLaunchText>
-          <S.DemoLaunchButton type="button" onClick={() => setDemoOpen(true)}>
-            התחילו מבחן ניסיון
-          </S.DemoLaunchButton>
-        </S.DemoLaunch>
-      </S.Section>
+          </S.SectionSub>
+          <DemoQuiz />
+        </S.DemoInner>
+      </S.DemoSection>
 
-      <S.Section>
-        <S.SectionTitle>שאלות נפוצות</S.SectionTitle>
-        {FAQ.map((item, i) => (
-          <S.FaqItem key={i}>
-            <S.FaqQuestion>{item.q}</S.FaqQuestion>
-            <S.FaqAnswer>{item.a}</S.FaqAnswer>
-          </S.FaqItem>
-        ))}
-      </S.Section>
+      {/* ===== למה לתרגל כאן? ===== */}
+      <S.FeaturesSection>
+        <S.FeaturesInner>
+          <S.FeaturesTitle>למה לתרגל כאן?</S.FeaturesTitle>
+          <S.FeaturesRow>
+            {FEATURES.map((f) => (
+              <S.FeatureCard key={f.title}>
+                <S.FeatureTitle>{f.title}</S.FeatureTitle>
+                <S.FeatureText>{f.text}</S.FeatureText>
+              </S.FeatureCard>
+            ))}
+          </S.FeaturesRow>
+        </S.FeaturesInner>
+      </S.FeaturesSection>
 
-      <S.Disclaimer>
-        אתר זה הוא כלי תרגול עצמאי ואינו קשור למשרד התחבורה או לרשות הרישוי, ואינו
-        מהווה מקור רשמי. השימוש כפוף ל<Link to="/terms">תנאי השימוש</Link>{" "}
-        ול<Link to="/privacy">מדיניות הפרטיות</Link>.
-      </S.Disclaimer>
+      {/* ===== שאלות נפוצות ===== */}
+      <S.FaqSection>
+        <S.FaqInner>
+          <S.FaqTitle>שאלות נפוצות</S.FaqTitle>
+          {FAQ.map((item) => (
+            <S.FaqItem key={item.q}>
+              <S.FaqQ>{item.q}</S.FaqQ>
+              <S.FaqA>{item.a}</S.FaqA>
+            </S.FaqItem>
+          ))}
+        </S.FaqInner>
+      </S.FaqSection>
 
-      {demoOpen && <DemoQuiz onClose={() => setDemoOpen(false)} />}
+      {/* ===== רצועת CTA ===== */}
+      <S.CtaSection>
+        <S.CtaDeco aria-hidden>
+          <Ring style={{ top: "60px", left: "7%", opacity: 0.12 }} width={92} height={92} />
+          <TrafficLight style={{ top: "40px", right: "8%", opacity: 0.5 }} width={40} height={106} />
+        </S.CtaDeco>
+        <S.CtaInner>
+          <S.CtaTitle>מוכנים לבדוק את עצמכם?</S.CtaTitle>
+          <S.CtaButton type="button" onClick={scrollToDemo}>
+            נסו מבחן ניסיון
+          </S.CtaButton>
+        </S.CtaInner>
+      </S.CtaSection>
     </>
   );
 }

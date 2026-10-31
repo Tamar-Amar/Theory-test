@@ -1,7 +1,10 @@
 import { Link, NavLink as RouterNavLink } from "react-router-dom";
 import styled, { css } from "styled-components";
 
-export const HEADER_HEIGHT = "3.5rem";
+/** גובה הכותרת הקבועה — משתנה CSS גלובלי (דסקטופ 68px / מובייל 56px) */
+export const HEADER_HEIGHT = "var(--header-h)";
+
+const MOBILE = "(max-width: 899px)";
 
 export const Bar = styled.header`
   position: fixed;
@@ -10,58 +13,56 @@ export const Bar = styled.header`
   right: 0;
   z-index: 60;
   height: ${HEADER_HEIGHT};
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  background: ${({ theme }) => theme.colors.accentDim};
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
-  padding: 0 1rem;
+  padding-inline: clamp(1.25rem, 6.67vw, 6rem);
+  background: ${({ theme }) => theme.colors.bg};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
+
+  @media ${MOBILE} {
+    padding-inline: 20px;
+  }
 `;
 
-export const Inner = styled.div<{ $wide?: boolean }>`
-  width:98%;
-  margin: 0 auto;
+export const Inner = styled.div`
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
 `;
 
 export const Brand = styled(Link)`
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  text-decoration: none;
-  color: ${({ theme }) => theme.colors.white};
-  border-radius: ${({ theme }) => theme.radius.pill};
-  padding: 0.2rem 0.4rem;
-  transition: opacity 0.12s ease;
   flex-shrink: 0;
+  color: ${({ theme }) => theme.colors.ink};
+  text-decoration: none;
+  border-radius: 8px;
+  transition: opacity 0.12s ease;
 
   &:hover {
     opacity: 0.85;
   }
 `;
 
-export const LogoMark = styled.span`
-  display: inline-flex;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
+/* ───────── ניווט (דסקטופ) ───────── */
 
-  svg {
-    width: 100%;
-    height: 100%;
+const navItem = css`
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.inkMuted};
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.12s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.ink};
   }
-`;
 
-export const BrandName = styled.span`
-  font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: -0.01em;
-  color: ${({ theme }) => theme.colors.white};
-
-  @media (max-width: 720px) {
-    display: none;
+  &[aria-current="page"] {
+    color: ${({ theme }) => theme.colors.ink};
+    font-weight: 500;
   }
 `;
 
@@ -69,100 +70,171 @@ export const Nav = styled.nav`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  flex: 1;
-  min-width: 0;
-  padding: 0 0.35rem;
+  gap: 36px;
 
-  @media (max-width: 480px) {
-    gap: 0.1rem;
-  }
-`;
-
-export const HeaderNavLink = styled(RouterNavLink)`
-  padding: 0.35rem 0.7rem 0.5rem;
-  color: rgba(255, 255, 255, 0.78);
-  font-weight: 600;
-  font-size: 0.88rem;
-  text-decoration: none;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: color 0.12s ease, border-color 0.12s ease;
-
-  &[aria-current="page"] {
-    color: ${({ theme }) => theme.colors.white};
-    border-bottom-color: ${({ theme }) => theme.colors.white};
-  }
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.35rem 0.45rem 0.5rem;
-    font-size: 0.82rem;
-  }
-`;
-
-export const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-`;
-
-const actionBase = css`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border: none;
-  border-radius: ${({ theme }) => theme.radius.pill};
-  background: rgba(255, 255, 255, 0.12);
-  color: ${({ theme }) => theme.colors.white};
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.12s ease;
-
-  svg {
-    width: 1.15em;
-    height: 1.15em;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.22);
-  }
-`;
-
-export const LoginLink = styled(Link)`
-  ${actionBase}
-  padding: 0.4rem 0.85rem;
-`;
-
-export const AuthButton = styled.button`
-  ${actionBase}
-  padding: 0.4rem 0.85rem;
-
-  @media (max-width: 500px) {
-    padding: 0.4rem;
-    width: 2.1rem;
-    height: 2.1rem;
-    gap: 0;
-  }
-`;
-
-export const AuthButtonLabel = styled.span`
-  @media (max-width: 500px) {
+  @media ${MOBILE} {
     display: none;
   }
 `;
 
-export const IconLink = styled(Link)`
-  ${actionBase}
-  padding: 0.4rem;
-  width: 2.1rem;
-  height: 2.1rem;
+export const NavItem = styled(RouterNavLink)`
+  ${navItem}
+`;
+
+/** קישור ניווט ללא מצב "פעיל" (לאורחים — שלושה קישורים מובילים להתחברות) */
+export const NavPlain = styled(Link)`
+  ${navItem}
+`;
+
+/* ───────── פעולות (כפתור משני בצד שמאל) ───────── */
+
+export const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+
+  @media ${MOBILE} {
+    display: none;
+  }
+`;
+
+/** הכפתור המשני מ‑Figma (Button/Secondary) */
+const secondary = css`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.25rem;
+  border-radius: ${({ theme }) => theme.radius.button};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1.5px solid ${({ theme }) => theme.colors.blue};
+  color: ${({ theme }) => theme.colors.blue};
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.blueTint};
+  }
+`;
+
+export const Cta = styled(Link)`
+  ${secondary}
+`;
+
+export const CtaButton = styled.button`
+  ${secondary}
+`;
+
+/** "התנתקות" — פעולה משנית בטקסט, כי בפיגמה אין לה עיצוב ייעודי */
+export const LogoutButton = styled.button`
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.inkMuted};
+  cursor: pointer;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.ink};
+  }
+`;
+
+/* ───────── מובייל: כפתור תפריט + רשימה נפתחת ───────── */
+
+export const MenuButton = styled.button`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: ${({ theme }) => theme.colors.ink};
+  cursor: pointer;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  @media ${MOBILE} {
+    display: inline-flex;
+  }
+`;
+
+export const MobilePanel = styled.div`
+  display: none;
+
+  @media ${MOBILE} {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: ${({ theme }) => theme.colors.bg};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
+    box-shadow: 0 12px 24px rgba(26, 29, 41, 0.08);
+  }
+`;
+
+const mobileItem = css`
+  display: block;
+  padding: 12px 0;
+  font-size: 1.0625rem;
+  color: ${({ theme }) => theme.colors.ink};
+  text-decoration: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
+
+  &[aria-current="page"] {
+    color: ${({ theme }) => theme.colors.blue};
+    font-weight: 600;
+  }
+`;
+
+export const MobileNavItem = styled(RouterNavLink)`
+  ${mobileItem}
+`;
+
+export const MobileNavPlain = styled(Link)`
+  ${mobileItem}
+`;
+
+export const MobileCta = styled(Link)`
+  ${secondary}
+  padding: 0.8rem 1rem;
+  font-size: 1.0625rem;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+export const MobileCtaButton = styled.button`
+  ${secondary}
+  padding: 0.8rem 1rem;
+  font-size: 1.0625rem;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+export const MobileLogout = styled.button`
+  padding: 12px 0 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  text-align: start;
+  color: ${({ theme }) => theme.colors.inkMuted};
+  cursor: pointer;
 `;

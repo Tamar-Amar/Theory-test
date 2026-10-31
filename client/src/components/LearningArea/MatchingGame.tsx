@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createLearningSession,
   type LearningQuestion,
@@ -6,11 +6,9 @@ import {
 } from "../../api";
 import { LicenseRequiredNotice } from "../LicenseRequiredNotice/LicenseRequiredNotice";
 import { formatQuestionText } from "../../utils/formatQuestionText";
-import { PrimaryButton, SecondaryButton } from "../Button/Button";
-import { Card } from "../Card/Card";
-import { FormField } from "../FormField/FormField";
-import { SelectField } from "../SelectField/SelectField";
+import { Chip } from "../Chip/Chip";
 import { LoadingState } from "../LoadingState/LoadingState";
+import { StatCard } from "../StatCard/StatCard";
 import * as S from "./LearningArea.styles";
 
 type Props = {
@@ -33,18 +31,6 @@ type AnswerCard = {
   pairId: string;
   text: string;
 };
-
-const PAIR_COLORS: Array<{
-  border: string;
-  bg: string;
-  text: string;
-}> = [
-  { border: "#2e5de8", bg: "rgba(46, 93, 232, 0.16)", text: "#153072" },
-  { border: "#2e9f6e", bg: "rgba(46, 159, 110, 0.17)", text: "#1f5f46" },
-  { border: "#c1832a", bg: "rgba(193, 131, 42, 0.16)", text: "#6e4a19" },
-  { border: "#7a5cd4", bg: "rgba(122, 92, 212, 0.17)", text: "#4d398c" },
-  { border: "#d05789", bg: "rgba(208, 87, 137, 0.16)", text: "#7d2f52" },
-];
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items];
@@ -197,71 +183,74 @@ export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
     setDropOverAnswerId(null);
   };
 
-  const pairStyle = (pairId: string): CSSProperties => {
-    const idx = Number(pairId) % PAIR_COLORS.length;
-    const p = PAIR_COLORS[Math.max(0, idx)];
-    return {
-      ["--pair-border" as string]: p.border,
-      ["--pair-bg" as string]: p.bg,
-      ["--pair-text" as string]: p.text,
-    };
-  };
-
   return (
     <>
       {mode === "setup" && !hasLicenseType && (
-        <LicenseRequiredNotice context="משחק התאמות" />
+        <LicenseRequiredNotice />
       )}
 
       {mode === "setup" && hasLicenseType && (
-        <Card>
+        <S.SetupCard>
           {loadingMeta ? (
             <LoadingState label="טוען קטגוריות…" />
           ) : (
             <>
+              <S.SetupTitle>קטגוריית לימוד</S.SetupTitle>
               <S.Intro>
                 בחרו קטגוריה והמערכת תיצור משחק התאמות עם 5 שאלות ו-5 תשובות נכונות.
                 אפשר לגרור שאלה לתשובה או לבחור בלחיצה.
               </S.Intro>
-              <div style={{ marginTop: "0.9rem" }}>
-                <FormField id="learning-category" label="קטגוריית לימוד">
-                  <SelectField
-                    id="learning-category"
-                    value={category}
-                    options={(meta?.categories || []).map((c) => ({
-                      value: c,
-                      label: c,
-                    }))}
-                    onChange={setCategory}
-                    ariaLabel="קטגוריית לימוד"
-                  />
-                </FormField>
-              </div>
-              {err ? <S.Note>{err}</S.Note> : null}
+              <S.ChipGrid>
+                {(meta?.categories || []).map((c) => (
+                  <Chip
+                    key={c}
+                    active={category === c}
+                    onClick={() => setCategory(c)}
+                  >
+                    {c}
+                  </Chip>
+                ))}
+              </S.ChipGrid>
+              {err ? <S.WrongHint>{err}</S.WrongHint> : null}
               <S.Actions>
-                <PrimaryButton
+                <S.PrimaryBtn
                   type="button"
                   onClick={startGame}
                   disabled={loadingGame || !(meta?.categories?.length ?? 0)}
                 >
                   {loadingGame ? "מכינים משחק…" : "התחילו משחק התאמות"}
-                </PrimaryButton>
+                </S.PrimaryBtn>
               </S.Actions>
             </>
           )}
-        </Card>
+        </S.SetupCard>
       )}
 
       {(mode === "game" || mode === "done") && (
-        <Card>
+        <>
           <S.TopRow>
-            <S.Badge>משחק התאמות · {category}</S.Badge>
-            <S.Counter>
-              זוגות שנמצאו: {foundPairs}/5 · מהלכים: {moves}
-            </S.Counter>
+            <S.Heading>
+              <S.Badge>משחק התאמות · {category}</S.Badge>
+              <S.Note>
+                התאמה נכונה: שאלה בצד ימין ותשובה נכונה בצד שמאל. אפשר לגרור שאלה
+                לתשובה או לבחור בלחיצה.
+              </S.Note>
+            </S.Heading>
+            <S.Stats>
+              <StatCard
+                value={
+                  <S.LtrNum>
+                    {foundPairs} / {questionsDeck.length}
+                  </S.LtrNum>
+                }
+                label="זוגות שנמצאו"
+              />
+              <StatCard value={moves} label="מהלכים" />
+            </S.Stats>
           </S.TopRow>
+
           <S.MatchBoard>
-            <S.Column $kind="questions">
+            <S.Column>
               <S.ColumnTitle>שאלות</S.ColumnTitle>
               <S.List>
                 {questionsDeck.map((q) => {
@@ -274,7 +263,6 @@ export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
                       $matched={donePair}
                       $selected={selectedQuestionId === q.id}
                       $hasImages={hasImages}
-                      style={donePair ? pairStyle(q.pairId) : undefined}
                       disabled={mode === "done" || donePair}
                       onDragStart={() => setDragQuestionId(q.id)}
                       onDragEnd={() => {
@@ -300,8 +288,8 @@ export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
               </S.List>
             </S.Column>
 
-            <S.Column $kind="answers">
-              <S.ColumnTitle>תשובות נכונות</S.ColumnTitle>
+            <S.Column>
+              <S.ColumnTitle>תשובות</S.ColumnTitle>
               <S.List>
                 {answersDeck.map((a) => {
                   const donePair = matchedPairIds.includes(a.pairId);
@@ -312,7 +300,6 @@ export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
                       $matched={donePair}
                       $dropOver={dropOverAnswerId === a.id}
                       $hasImages={hasImages}
-                      style={donePair ? pairStyle(a.pairId) : undefined}
                       disabled={mode === "done" || donePair}
                       onClick={() => onClickAnswer(a.id)}
                       onDragOver={(e) => {
@@ -335,30 +322,33 @@ export function MatchingGame({ meta, loadingMeta, hasLicenseType }: Props) {
               </S.List>
             </S.Column>
           </S.MatchBoard>
-          {wrongPairPing ? <S.WrongHint>לא תואם, נסו התאמה אחרת</S.WrongHint> : null}
-          <S.Note>התאמה נכונה: שאלה בצד ימין ותשובה נכונה בצד שמאל.</S.Note>
-          {mode === "game" && (
-            <S.Actions>
-              <SecondaryButton type="button" onClick={resetToSetup}>
-                בחירת קטגוריה מחדש
-              </SecondaryButton>
-            </S.Actions>
-          )}
+
+          {wrongPairPing ? (
+            <S.WrongHint>לא תואם, נסו התאמה אחרת</S.WrongHint>
+          ) : null}
+
           {mode === "done" && (
             <S.ResultBox>
-              <S.ResultTitle>כל הכבוד! השלמתם את כל 5 הזוגות 🎉</S.ResultTitle>
+              <S.ResultTitle>
+                כל הכבוד! השלמתם את כל {questionsDeck.length} הזוגות 🎉
+              </S.ResultTitle>
               <S.ResultText>סיימתם ב־{moves} מהלכים.</S.ResultText>
-              <S.Actions>
-                <SecondaryButton type="button" onClick={resetToSetup}>
-                  בחירת קטגוריה אחרת
-                </SecondaryButton>
-                <PrimaryButton type="button" onClick={startGame}>
-                  עוד משחק באותה קטגוריה
-                </PrimaryButton>
-              </S.Actions>
             </S.ResultBox>
           )}
-        </Card>
+
+          <S.Actions>
+            <S.SecondaryBtn
+              type="button"
+              onClick={startGame}
+              disabled={loadingGame}
+            >
+              {loadingGame ? "מכינים משחק…" : "עוד משחק באותה קטגוריה"}
+            </S.SecondaryBtn>
+            <S.GhostBtn type="button" onClick={resetToSetup}>
+              בחירת קטגוריה אחרת
+            </S.GhostBtn>
+          </S.Actions>
+        </>
       )}
     </>
   );

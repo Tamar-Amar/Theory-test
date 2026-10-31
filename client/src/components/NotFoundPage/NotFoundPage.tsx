@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import * as S from "../Legal/Legal.styles";
+import { RoadCurve, Triangle, TrafficLight } from "../Deco/Deco";
+import * as S from "./NotFoundPage.styles";
 
 export function NotFoundPage() {
   useEffect(() => {
@@ -9,22 +9,20 @@ export function NotFoundPage() {
   }, []);
 
   return (
-    <S.Article dir="rtl">
+    <S.Root>
+      <S.Deco aria-hidden>
+        <Triangle style={{ top: "90px", left: "19%", opacity: 0.15 }} width={110} height={96} />
+        <TrafficLight style={{ top: "100px", left: "76%", opacity: 0.5 }} width={44} height={116} />
+        <RoadCurve style={{ top: "250px", left: "25%", opacity: 0.25 }} width={720} height={180} />
+      </S.Deco>
+
+      <S.Code>404</S.Code>
       <S.Title>הדף לא נמצא</S.Title>
-      <S.Intro>
-        הכתובת הזו אינה קיימת באתר. חזרו לדף הבית, או עיינו במפת האתר.
-      </S.Intro>
-      <S.Paragraph>
-        <Link to="/">חזרה לדף הבית</Link>
-      </S.Paragraph>
-      <S.List>
-        <li>
-          <a href="/llms.txt">llms.txt</a> — מה האתר עושה ולמי הוא מיועד
-        </li>
-        <li>
-          <a href="/sitemap.xml">sitemap.xml</a> — עמודים ציבוריים
-        </li>
-      </S.List>
-    </S.Article>
+      <S.Text>
+        הכתובת הזו אינה קיימת באתר. חזרו לדף הבית, או עיינו ב
+        <a href="/sitemap.xml">מפת האתר</a>.
+      </S.Text>
+      <S.HomeLink to="/">חזרה לדף הבית</S.HomeLink>
+    </S.Root>
   );
 }

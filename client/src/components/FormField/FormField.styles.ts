@@ -10,41 +10,58 @@ export const Row = styled.div`
 
 export const Label = styled.label`
   display: block;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.muted};
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.ink};
   margin-bottom: 0.4rem;
 `;
 
 export const Input = styled.input`
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  border-radius: ${({ theme }) => theme.radius.control};
-  border: 1px solid ${({ theme }) => theme.colors.surface2};
+  padding: 0.875rem 1rem;
+  border-radius: ${({ theme }) => theme.radius.field};
+  border: 1.5px solid ${({ theme }) => theme.colors.divider};
   background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.ink};
   font-size: 1rem;
   font-family: inherit;
   box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &[data-multiline="true"] {
     min-height: 7rem;
     resize: vertical;
   }
 
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.blue};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.blueTint};
+  }
+
   &::placeholder {
-    color: ${({ theme }) => theme.colors.muted};
+    color: ${({ theme }) => theme.colors.inkMuted};
     opacity: 0.85;
   }
 `;
 
 export const Select = styled.select`
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  border-radius: ${({ theme }) => theme.radius.control};
-  border: 1px solid ${({ theme }) => theme.colors.surface2};
+  padding: 0.875rem 1rem;
+  border-radius: ${({ theme }) => theme.radius.field};
+  border: 1.5px solid ${({ theme }) => theme.colors.divider};
   background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.ink};
   font-size: 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.blue};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.blueTint};
+  }
 `;
 
 export const PasswordWrap = styled.div`

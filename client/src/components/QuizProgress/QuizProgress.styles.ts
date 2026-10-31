@@ -1,5 +1,7 @@
 import styled from "styled-components";
 
+export type SegKind = "done" | "current" | "todo";
+
 export const Wrap = styled.div`
   margin-bottom: 1.25rem;
 `;
@@ -8,31 +10,33 @@ export const Top = styled.div`
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: ${({ theme }) => theme.colors.muted};
+  color: ${({ theme }) => theme.colors.inkMuted};
   margin-bottom: 0.35rem;
 `;
 
 export const Timer = styled.span`
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.blue};
 `;
 
-export const Bar = styled.div`
-  height: 6px;
-  background: ${({ theme }) => theme.colors.surface2};
-  border-radius: ${({ theme }) => theme.radius.pill};
-  overflow: hidden;
+export const Segments = styled.div`
+  display: flex;
+  gap: 5px;
+  align-items: stretch;
+  width: 100%;
 `;
 
-export const Fill = styled.div<{ $pct: number }>`
-  height: 100%;
-  width: ${({ $pct }) => $pct}%;
-  background: linear-gradient(
-    90deg,
-    ${({ theme }) => theme.colors.accent},
-    ${({ theme }) => theme.colors.mint}
-  );
-  border-radius: ${({ theme }) => theme.radius.pill};
-  transition: width 0.35s ease;
+export const Seg = styled.div<{ $kind: SegKind }>`
+  flex: 1 1 0;
+  min-width: 0;
+  height: 5px;
+  border-radius: 3px;
+  background: ${({ theme, $kind }) =>
+    $kind === "done"
+      ? theme.colors.blue
+      : $kind === "current"
+      ? theme.colors.orange
+      : theme.colors.divider};
+  transition: background 0.3s ease;
 `;

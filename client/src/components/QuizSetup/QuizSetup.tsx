@@ -1,17 +1,10 @@
 import type { Meta } from "../../api";
-import { Card } from "../Card/Card";
-import { FormField } from "../FormField/FormField";
-import { SelectField } from "../SelectField/SelectField";
+import { Chip } from "../Chip/Chip";
 import { SmartModeInfo } from "../SmartModeInfo/SmartModeInfo";
-import { PrimaryButton } from "../Button/Button";
 import { LoadingState } from "../LoadingState/LoadingState";
+import * as S from "./QuizSetup.styles";
 
-const COUNTS = [5, 10, 15, 20, 30] as const;
-
-const COUNT_OPTIONS = COUNTS.map((n) => ({
-  value: String(n),
-  label: `${n} שאלות`,
-}));
+const COUNTS = [30, 20, 10] as const;
 
 type Props = {
   meta: Meta | null;
@@ -24,6 +17,7 @@ type Props = {
   onStart: () => void;
 };
 
+/** הגדרת מבחן — נושא ומספר שאלות. סוג הרישיון נבחר רק באזור האישי. */
 export function QuizSetup({
   meta,
   loadingMeta,
@@ -34,48 +28,62 @@ export function QuizSetup({
   onCategory,
   onStart,
 }: Props) {
+  if (loadingMeta || !meta) {
+    return <LoadingState />;
+  }
+
+  const footer = (
+    <>
+      <SmartModeInfo />
+      <S.Actions>
+        <S.StartButton
+          type="button"
+          disabled={starting || !meta.questionCount}
+          onClick={onStart}
+        >
+          {starting ? "פותחים מבחן…" : "התחילו מבחן"}
+        </S.StartButton>
+      </S.Actions>
+    </>
+  );
+
   return (
     <>
-      <Card>
-        {loadingMeta ? (
-          <LoadingState />
-        ) : (
-          <>
-            <FormField id="count" label="כמה שאלות במבחן?">
-              <SelectField
-                id="count"
-                value={String(count)}
-                options={COUNT_OPTIONS}
-                onChange={(v) => onCount(Number(v))}
-                ariaLabel="כמה שאלות במבחן"
-              />
-            </FormField>
-            <FormField id="cat" label="נושא (אופציונלי)">
-              <SelectField
-                id="cat"
-                value={category}
-                options={[
-                  { value: "", label: "הכל - מעורבב" },
-                  ...(meta?.categories || []).map((c) => ({
-                    value: c,
-                    label: c,
-                  })),
-                ]}
-                onChange={onCategory}
-                ariaLabel="נושא המבחן"
-              />
-            </FormField>
-            <SmartModeInfo />
-            <PrimaryButton
-              type="button"
-              disabled={starting || !meta?.questionCount}
-              onClick={onStart}
+    <S.MainCard>
+      <S.Section>
+        <S.CardTitle>נושא המבחן</S.CardTitle>
+        <S.ChipGrid>
+          {meta.categories.map((c) => (
+            <Chip
+              key={c}
+              active={category === c}
+              onClick={() => onCategory(c)}
             >
-              {starting ? "פותחים מבחן…" : "התחילו מבחן"}
-            </PrimaryButton>
-          </>
-        )}
-      </Card>
+              {c}
+            </Chip>
+          ))}
+          <Chip active={category === ""} onClick={() => onCategory("")}>
+            הכל - מעורב
+          </Chip>
+        </S.ChipGrid>
+      </S.Section>
+
+      <S.Section>
+        <S.CardTitle>כמה שאלות במבחן?</S.CardTitle>
+        <S.ChipGrid>
+          {COUNTS.map((n) => (
+            <Chip key={n} active={count === n} onClick={() => onCount(n)}>
+              {n} שאלות
+            </Chip>
+          ))}
+        </S.ChipGrid>
+      </S.Section>
+
+      {/* דסקטופ: בתוך הכרטיס */}
+      <S.Inside>{footer}</S.Inside>
+    </S.MainCard>
+    {/* מובייל: מחוץ לכרטיס, כמו ב‑Figma */}
+    <S.Outside>{footer}</S.Outside>
     </>
   );
 }

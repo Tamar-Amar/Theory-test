@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { submitSupportTicket } from "../../api";
+import { PASS_STORY_PREFIX } from "../../constants/stories";
 import { ErrorAlert } from "../ErrorAlert/ErrorAlert";
 import { FormField } from "../FormField/FormField";
-import * as FF from "../FormField/FormField.styles";
-import { PrimaryButton } from "../Button/Button";
 import * as S from "./PassStoryPopup.styles";
 
 type Props = {
@@ -11,21 +10,6 @@ type Props = {
 };
 
 const MIN_STORY = 10;
-
-function MedalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden focusable="false">
-      <path
-        fill="currentColor"
-        d="M12 2.2a5.2 5.2 0 1 0 .1 10.4A5.2 5.2 0 0 0 12 2.2zm0 1.8a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z"
-      />
-      <path
-        fill="currentColor"
-        d="M8.2 12.6 6.4 21l5.6-2.6L17.6 21l-1.8-8.4a6.3 6.3 0 0 1-7.6 0z"
-      />
-    </svg>
-  );
-}
 
 export function PassStoryPopup({ onClose }: Props) {
   const titleId = useId();
@@ -96,7 +80,7 @@ export function PassStoryPopup({ onClose }: Props) {
     setBusy(true);
     setErr(null);
     try {
-      await submitSupportTicket(`סיפור הצלחה — עברתי את מבחן התאוריה:\n${text}`);
+      await submitSupportTicket(`${PASS_STORY_PREFIX}\n${text}`);
       setThanks("sent");
       setBusy(false);
     } catch (e) {
@@ -122,9 +106,7 @@ export function PassStoryPopup({ onClose }: Props) {
         >
           ✕
         </S.Close>
-        <S.Badge>
-          <MedalIcon />
-        </S.Badge>
+        <S.Badge aria-hidden>🎉</S.Badge>
         {thanks ? (
           <S.Thanks id={titleId} role="status">
             {thanks === "sent"
@@ -140,12 +122,12 @@ export function PassStoryPopup({ onClose }: Props) {
             {err && <ErrorAlert compact>{err}</ErrorAlert>}
             <S.FieldWrap>
               <FormField id="pass-story" label="הסיפור שלכם">
-                <FF.Input
+                <S.TextArea
                   as="textarea"
+                  $height={120}
                   id="pass-story"
                   data-multiline="true"
                   data-pass-story
-                  rows={4}
                   maxLength={2000}
                   value={story}
                   placeholder="עברתי! התרגול על הטעויות עזר לי להגיע מוכנה..."
@@ -156,29 +138,30 @@ export function PassStoryPopup({ onClose }: Props) {
                 />
               </FormField>
             </S.FieldWrap>
-            <PrimaryButton
-              type="button"
-              disabled={busy}
-              onClick={() => void submit()}
-            >
-              {busy ? "שולחים…" : "ספרו לנו"}
-            </PrimaryButton>
-            <S.Skip
-              type="button"
-              disabled={busy}
-              onClick={() => setThanks("later")}
-            >
-              עדיין לא עברתי
-            </S.Skip>
-            <S.Skip type="button" disabled={busy} onClick={close}>
-              לא עכשיו
-            </S.Skip>
+            <S.Actions>
+              <S.PrimaryBtn
+                type="button"
+                disabled={busy}
+                onClick={() => void submit()}
+              >
+                {busy ? "שולחים…" : "ספרו לנו"}
+              </S.PrimaryBtn>
+              <S.GhostBtn
+                type="button"
+                disabled={busy}
+                onClick={() => setThanks("later")}
+              >
+                עדיין לא עברתי
+              </S.GhostBtn>
+            </S.Actions>
           </>
         )}
         {thanks && (
-          <S.Skip type="button" onClick={close}>
-            סגירה
-          </S.Skip>
+          <S.Actions>
+            <S.GhostBtn type="button" onClick={close}>
+              סגירה
+            </S.GhostBtn>
+          </S.Actions>
         )}
       </S.Modal>
     </S.Overlay>
