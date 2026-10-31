@@ -44,7 +44,7 @@ function scrollToDemo() {
 }
 
 /** מינימום דירוגים אמיתיים לפני שמציגים ממוצע ומוסיפים אותו לסימון לגוגל */
-const MIN_RATINGS = 10;
+const MIN_RATINGS = 5;
 
 /** מוסיף aggregateRating לסימון ה-JSON-LD הסטטי (דירוג אמיתי בלבד) */
 function applyRatingSchema(r: PublicRating) {
