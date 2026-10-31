@@ -53,7 +53,7 @@ export function SupportTicketForm({ guest = false, defaultEmail = "" }: Props) {
           <FormField id="ticket-name" label="שם">
             <FieldInput
               id="ticket-name"
-              placeholder="תמר"
+              placeholder="השם שלך"
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
