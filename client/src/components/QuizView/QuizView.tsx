@@ -129,7 +129,7 @@ export function QuizView({
             disabled={questionIndex === 0}
             onClick={onPrev}
           >
-            <WideOnly>← לשאלה הקודמת</WideOnly>
+            <WideOnly>→ לשאלה הקודמת</WideOnly>
             <NarrowOnly>→ הקודמת</NarrowOnly>
           </S.PrevButton>
         </S.NavRow>

@@ -21,6 +21,7 @@ const inner = css`
 /* ============ כפתורים (רוחב אוטומטי, לפי מערכת העיצוב) ============ */
 
 const btnBase = css`
+  direction: rtl;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -289,6 +290,7 @@ export const QCount = styled.span`
 `;
 
 export const TopicChip = styled.span`
+  direction: rtl;
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 1rem;
@@ -542,6 +544,7 @@ export const FeaturesRow = styled.div`
 `;
 
 export const FeatureCard = styled.div`
+  direction: rtl;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;

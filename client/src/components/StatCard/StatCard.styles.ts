@@ -1,6 +1,8 @@
 import styled from "styled-components";
 
 export const Root = styled.div`
+  /* הכרטיס תמיד RTL, גם כשהשורה שמחזיקה אותו בסדר LTR (עיגון סדר הכרטיסים) */
+  direction: rtl;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;

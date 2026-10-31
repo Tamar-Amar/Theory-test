@@ -156,7 +156,7 @@ export function DemoQuiz() {
           {isLast ? "סיום וציון" : "לשאלה הבאה"}
         </S.DemoNext>
         <S.DemoPrev type="button" disabled={index === 0} onClick={goPrev}>
-          ← לשאלה הקודמת
+          → לשאלה הקודמת
         </S.DemoPrev>
       </S.CardNav>
     </S.QuizCard>

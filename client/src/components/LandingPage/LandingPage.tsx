@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Ring, Triangle, TrafficLight, RoadCurve } from "../Deco/Deco";
 import { StatCard } from "../StatCard/StatCard";
 import { NarrowOnly, WideOnly } from "../Responsive/Responsive";
-import { Tag } from "../Tag/Tag";
 import { DemoQuiz } from "./DemoQuiz";
 import * as S from "./LandingPage.styles";
 
@@ -65,9 +64,6 @@ export function LandingPage() {
 
         <S.HeroInner>
           <S.HeroContent>
-            <Tag variant="warm">
-              חינם · בלי הרשמה<WideOnly> למבחן ניסיון</WideOnly>
-            </Tag>
             <S.Title>
               לומדים תאוריה <span>ברוגע</span>,<br />
               ועוברים בביטחון.
@@ -116,9 +112,9 @@ export function LandingPage() {
       {/* ===== מבחן ניסיון ===== */}
       <S.DemoSection id="demo">
         <S.DemoInner>
-          <S.SectionTitle>מבחן ניסיון - בלי הרשמה</S.SectionTitle>
+          <S.SectionTitle>מבחן ניסיון - ללא הרשמה</S.SectionTitle>
           <S.SectionSub>
-            מבחן ניסיון קצר שייתן לכם טעימה מהמערכת. לוקח פחות מדקה.
+            מבחן ניסיון קצר שייתן לכם טעימה מהמערכת.
           </S.SectionSub>
           <DemoQuiz />
         </S.DemoInner>

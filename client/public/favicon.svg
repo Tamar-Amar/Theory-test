@@ -1,7 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="">
-  <rect width="32" height="32" rx="8" fill="#2563eb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <title>תאוריה</title>
   <path
-    fill="#ffffff"
-    d="M9 9.5h14a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1zm1 2v9h12v-9H10zm2 2h8v1.5h-8V13.5zm0 3h6v1.5h-6V16.5z"
+    d="M35 20C35 28.2843 28.2843 35 20 35C11.7157 35 5 28.2843 5 20C5 11.7157 11.7157 5 20 5C28.2843 5 35 11.7157 35 20Z"
+    stroke="#1F4FD6"
+    stroke-width="5"
+  />
+  <path
+    d="M12.5 27.5L27.5 12.5"
+    stroke="#1F4FD6"
+    stroke-width="5"
+    stroke-linecap="round"
   />
 </svg>
